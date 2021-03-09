@@ -15,9 +15,6 @@
 
 namespace hpx {
     using hpx::parallel::lexicographical_compare;
-    using hpx::parallel::max_element;
-    using hpx::parallel::min_element;
-    using hpx::parallel::minmax_element;
     using hpx::parallel::partition;
     using hpx::parallel::partition_copy;
     using hpx::parallel::reverse;
