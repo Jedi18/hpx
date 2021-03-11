@@ -154,6 +154,38 @@ namespace hpx { namespace parallel { namespace util {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    struct min_max_result
+    {
+        HPX_NO_UNIQUE_ADDRESS T min;
+        HPX_NO_UNIQUE_ADDRESS T max;
+
+        template <typename T2,
+            typename Enable = typename std::enable_if<
+                std::is_convertible<T const&, T>::value>::type>
+        constexpr operator min_max_result<T2>() const&
+        {
+            return {min, max};
+        }
+
+        template <typename T2,
+            typename Enable = typename std::enable_if<
+                std::is_convertible<T, T2>::value>::type>
+        constexpr operator min_max_result<T2>() &&
+        {
+            return {std::move(min), std::move(max)};
+        }
+
+        template <typename Archive>
+        void serialize(Archive& ar, unsigned)
+        {
+            // clang-format off
+            ar & min & max;
+            // clang-format on
+        }
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
     template <typename I, typename F>
     struct in_fun_result
     {
@@ -295,4 +327,5 @@ namespace hpx { namespace ranges {
     using hpx::parallel::util::in_in_out_result;
     using hpx::parallel::util::in_in_result;
     using hpx::parallel::util::in_out_result;
+    using hpx::parallel::util::min_max_result;
 }}    // namespace hpx::ranges
