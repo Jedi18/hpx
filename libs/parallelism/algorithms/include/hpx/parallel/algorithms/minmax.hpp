@@ -25,7 +25,7 @@ namespace hpx {
     ///                     forward iterator.
     /// \tparam F           The type of the function/function object to use
     ///                     (deduced).
-    /// 
+    ///
     /// \param first        Refers to the beginning of the sequence of elements
     ///                     the algorithm will be applied to.
     /// \param last         Refers to the end of the sequence of elements the
@@ -75,7 +75,7 @@ namespace hpx {
     ///                     (deduced). Unlike its sequential form, the parallel
     ///                     overload of \a min_element requires \a F to meet the
     ///                     requirements of \a CopyConstructible.
-    /// 
+    ///
     /// \param policy       The execution policy to use for the scheduling of
     ///                     the iterations.
     /// \param first        Refers to the beginning of the sequence of elements
@@ -133,7 +133,7 @@ namespace hpx {
     ///                     forward iterator.
     /// \tparam F           The type of the function/function object to use
     ///                     (deduced).
-    /// 
+    ///
     /// \param first        Refers to the beginning of the sequence of elements
     ///                     the algorithm will be applied to.
     /// \param last         Refers to the end of the sequence of elements the
@@ -390,6 +390,9 @@ namespace hpx {
 #include <vector>
 
 namespace hpx { namespace parallel { inline namespace v1 {
+    template <typename T>
+    using minmax_element_result = hpx::parallel::util::min_max_result<T>;
+
     ///////////////////////////////////////////////////////////////////////////
     // min_element
     namespace detail {
@@ -668,11 +671,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         /// \cond NOINTERNAL
         template <typename ExPolicy, typename FwdIter, typename F,
             typename Proj>
-        util::in_out_result<FwdIter, FwdIter> sequential_minmax_element(
-            ExPolicy&&, FwdIter it, std::size_t count, F const& f,
-            Proj const& proj)
+        minmax_element_result<FwdIter> sequential_minmax_element(ExPolicy&&,
+            FwdIter it, std::size_t count, F const& f, Proj const& proj)
         {
-            util::in_out_result<FwdIter, FwdIter> result(it, it);
+            minmax_element_result<FwdIter> result(it, it);
 
             if (count == 0 || count == 1)
                 return result;
@@ -698,7 +700,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
         template <typename Iter>
         struct minmax_element
           : public detail::algorithm<minmax_element<Iter>,
-                util::in_out_result<Iter, Iter>>
+                minmax_element_result<Iter>>
         {
             // this has to be a member of the algorithm type as we access this
             // generically from the segmented algorithms
@@ -742,7 +744,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
             template <typename ExPolicy, typename FwdIter, typename Sent,
                 typename F, typename Proj>
-            static util::in_out_result<FwdIter, FwdIter> sequential(
+            static minmax_element_result<FwdIter> sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
                 return std::minmax_element(first, last,
@@ -753,11 +755,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
             template <typename ExPolicy, typename FwdIter, typename Sent,
                 typename F, typename Proj>
             static typename util::detail::algorithm_result<ExPolicy,
-                util::in_out_result<FwdIter, FwdIter>>::type
+                minmax_element_result<FwdIter>>::type
             parallel(
                 ExPolicy&& policy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                typedef util::in_out_result<FwdIter, FwdIter> result_type;
+                typedef minmax_element_result<FwdIter> result_type;
 
                 result_type result(first, first);
                 if (first == last || ++first == last)
@@ -767,7 +769,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 }
 
                 auto f1 = [f, proj, policy](FwdIter it, std::size_t part_count)
-                    -> util::in_out_result<FwdIter, FwdIter> {
+                    -> minmax_element_result<FwdIter> {
                     return sequential_minmax_element(
                         policy, it, part_count, f, proj);
                 };
@@ -795,6 +797,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 #undef min
 #undef max
 #endif
+
     // clang-format off
     template <typename ExPolicy, typename FwdIter, typename F = detail::less,
         typename Proj = util::projection_identity,
@@ -810,7 +813,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
     HPX_DEPRECATED_V(1, 7,
         "hpx::parallel::minmax_element is deprecated, use hpx::minmax_element "
         "instead") typename util::detail::algorithm_result<ExPolicy,
-        hpx::util::in_out_result<FwdIter, FwdIter>>::type
+        minmax_element_result<FwdIter, FwdIter>>::type
         minmax_element(ExPolicy&& policy, FwdIter first, FwdIter last,
             F&& f = F(), Proj&& proj = Proj())
     {
@@ -819,9 +822,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
         typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
 
-        return detail::minmax_element<util::in_out_result<FwdIter, FwdIter>>()
-            .call(std::forward<ExPolicy>(policy), is_seq(), first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+        return detail::minmax_element<minmax_element_result<FwdIter>>().call(
+            std::forward<ExPolicy>(policy), is_seq(), first, last,
+            std::forward<F>(f), std::forward<Proj>(proj));
     }
 #if defined(HPX_MSVC)
 #pragma pop_macro("min")
@@ -830,22 +833,23 @@ namespace hpx { namespace parallel { inline namespace v1 {
 }}}    // namespace hpx::parallel::v1
 
 namespace hpx {
+    template <typename T>
+    using minmax_element_result = hpx::parallel::util::min_max_result<T>;
+
     ///////////////////////////////////////////////////////////////////////////
     // CPO for hpx::min_element
     HPX_INLINE_CONSTEXPR_VARIABLE struct min_element_t final
       : hpx::functional::tag_fallback<min_element_t>
     {
         // clang-format off
-        template <typename FwdIter, typename F,
+        template <typename FwdIter,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<F,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend InIter tag_fallback_invoke(
-            hpx::min_element_t, FwdIter first, FwdIter last, F&& f)
+        friend FwdIter tag_fallback_invoke(
+            hpx::min_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -857,19 +861,16 @@ namespace hpx {
 
         // clang-format off
         template <typename ExPolicy, typename FwdIter,
-            typename F,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
                 hpx::is_execution_policy<ExPolicy>::value &&
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<Pred,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
         tag_fallback_invoke(hpx::min_element_t, ExPolicy&& policy,
-            FwdIter first, FwdIter last, F&& f)
+            FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -889,16 +890,14 @@ namespace hpx {
       : hpx::functional::tag_fallback<max_element_t>
     {
         // clang-format off
-        template <typename FwdIter, typename F,
+        template <typename FwdIter,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<F,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend InIter tag_fallback_invoke(
-            hpx::max_element_t, FwdIter first, FwdIter last, F&& f)
+        friend FwdIter tag_fallback_invoke(
+            hpx::max_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -910,19 +909,16 @@ namespace hpx {
 
         // clang-format off
         template <typename ExPolicy, typename FwdIter,
-            typename F,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
                 hpx::is_execution_policy<ExPolicy>::value &&
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<Pred,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
         tag_fallback_invoke(hpx::max_element_t, ExPolicy&& policy,
-            FwdIter first, FwdIter last, F&& f)
+            FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -942,17 +938,14 @@ namespace hpx {
       : hpx::functional::tag_fallback<minmax_element_t>
     {
         // clang-format off
-        template <typename FwdIter, typename F,
+        template <typename FwdIter,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<F,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend parallel::util::in_out_result<FwdIter, FwdIter>
-        tag_fallback_invoke(
-            hpx::min_element_t, FwdIter first, FwdIter last, F&& f)
+        friend minmax_element_result<FwdIter> tag_fallback_invoke(
+            hpx::minmax_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -964,19 +957,16 @@ namespace hpx {
 
         // clang-format off
         template <typename ExPolicy, typename FwdIter,
-            typename F,
+            typename F = hpx::parallel::v1::detail::less,
             HPX_CONCEPT_REQUIRES_(
                 hpx::is_execution_policy<ExPolicy>::value &&
-                hpx::traits::is_iterator<FwdIter>::value &&
-                hpx::is_invocable_v<Pred,
-                    typename std::iterator_traits<FwdIter>::value_type
-                >
+                hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
-            parallel::util::in_out_result<FwdIter, FwdIter>>::type
+            minmax_element_result<FwdIter>>::type
         tag_fallback_invoke(hpx::minmax_element_t, ExPolicy&& policy,
-            FwdIter first, FwdIter last, F&& f)
+            FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
