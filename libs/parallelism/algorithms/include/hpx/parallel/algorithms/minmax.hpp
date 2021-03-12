@@ -356,7 +356,7 @@ namespace hpx {
     ///
     template <typename ExPolicy, typename FwdIter, typename F>
     typename util::detail::algorithm_result<ExPolicy,
-        hpx::parallel::util::in_out_result<FwdIter, FwdIter>>::type
+        hpx::parallel::util::minmax_element_result<FwdIter>>::type
     minmax_element(ExPolicy&& policy, FwdIter first, FwdIter last, F&& f);
 
 }    // namespace hpx
@@ -674,7 +674,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
         minmax_element_result<FwdIter> sequential_minmax_element(ExPolicy&&,
             FwdIter it, std::size_t count, F const& f, Proj const& proj)
         {
-            minmax_element_result<FwdIter> result(it, it);
+            minmax_element_result<FwdIter> result = {it, it};
 
             if (count == 0 || count == 1)
                 return result;
@@ -682,15 +682,15 @@ namespace hpx { namespace parallel { inline namespace v1 {
             util::loop_n<ExPolicy>(++it, count - 1,
                 [&f, &result, &proj](FwdIter const& curr) -> void {
                     if (hpx::util::invoke(f, hpx::util::invoke(proj, *curr),
-                            hpx::util::invoke(proj, *result.first)))
+                            hpx::util::invoke(proj, *result.min)))
                     {
-                        result.first = curr;
+                        result.min = curr;
                     }
 
                     if (!hpx::util::invoke(f, hpx::util::invoke(proj, *curr),
-                            hpx::util::invoke(proj, *result.second)))
+                            hpx::util::invoke(proj, *result.max)))
                     {
-                        result.second = curr;
+                        result.max = curr;
                     }
                 });
 
@@ -720,17 +720,17 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 util::loop_n<ExPolicy>(++it, count - 1,
                     [&f, &result, &proj](PairIter const& curr) -> void {
                         if (hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *curr->first),
-                                hpx::util::invoke(proj, *result.first)))
+                                hpx::util::invoke(proj, *curr->min),
+                                hpx::util::invoke(proj, *result.min)))
                         {
-                            result.first = curr->first;
+                            result.min = curr->min;
                         }
 
                         if (!hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *curr->second),
-                                hpx::util::invoke(proj, *result.second)))
+                                hpx::util::invoke(proj, *curr->max),
+                                hpx::util::invoke(proj, *result.max)))
                         {
-                            result.second = curr->second;
+                            result.max = curr->max;
                         }
                     });
 
@@ -747,9 +747,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
             static minmax_element_result<FwdIter> sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                return std::minmax_element(first, last,
+                std::pair<FwdIter, FwdIter> result = std::minmax_element(first, last,
                     util::compare_projected<F, Proj>(
                         std::forward<F>(f), std::forward<Proj>(proj)));
+                return minmax_element_result<FwdIter>{
+                    result.first, result.second};
             }
 
             template <typename ExPolicy, typename FwdIter, typename Sent,
@@ -761,7 +763,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
             {
                 typedef minmax_element_result<FwdIter> result_type;
 
-                result_type result(first, first);
+                result_type result = {first, first};
                 if (first == last || ++first == last)
                 {
                     return util::detail::algorithm_result<ExPolicy,
@@ -783,7 +785,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
                 return util::partitioner<ExPolicy, result_type,
                     result_type>::call(std::forward<ExPolicy>(policy),
-                    result.first, detail::distance(result.first, last),
+                    result.min, detail::distance(result.min, last),
                     std::move(f1), hpx::util::unwrapping(std::move(f2)));
             }
         };
@@ -813,7 +815,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
     HPX_DEPRECATED_V(1, 7,
         "hpx::parallel::minmax_element is deprecated, use hpx::minmax_element "
         "instead") typename util::detail::algorithm_result<ExPolicy,
-        minmax_element_result<FwdIter, FwdIter>>::type
+        minmax_element_result<FwdIter>>::type
         minmax_element(ExPolicy&& policy, FwdIter first, FwdIter last,
             F&& f = F(), Proj&& proj = Proj())
     {
