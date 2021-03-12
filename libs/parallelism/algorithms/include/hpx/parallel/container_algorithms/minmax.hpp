@@ -1048,7 +1048,6 @@ namespace hpx { namespace ranges {
                     hpx::execution::sequenced_policy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>
                 >::value
-                >
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type

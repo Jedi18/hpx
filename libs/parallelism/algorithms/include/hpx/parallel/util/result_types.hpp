@@ -278,6 +278,36 @@ namespace hpx { namespace parallel { namespace util {
         }
 
         template <typename ZipIter>
+        min_max_result<typename hpx::tuple_element<0,
+            typename ZipIter::iterator_tuple_type>::type>
+        get_min_max_result(ZipIter&& zipiter)
+        {
+            using iterator_tuple_type = typename ZipIter::iterator_tuple_type;
+
+            using result_type = min_max_result<
+                typename hpx::tuple_element<0, iterator_tuple_type>::type>;
+
+            iterator_tuple_type t = zipiter.get_iterator_tuple();
+            return result_type{hpx::get<0>(t), hpx::get<1>(t)};
+        }
+
+        template <typename ZipIter>
+        hpx::future<min_max_result<typename hpx::tuple_element<0,
+            typename ZipIter::iterator_tuple_type>::type>>
+        get_min_max_result(hpx::future<ZipIter>&& zipiter)
+        {
+            using iterator_tuple_type = typename ZipIter::iterator_tuple_type;
+
+            using result_type = min_max_result<
+                typename hpx::tuple_element<0, iterator_tuple_type>::type>;
+
+            return lcos::make_future<result_type>(
+                std::move(zipiter), [](ZipIter zipiter) {
+                    return get_min_max_result(std::move(zipiter));
+                });
+        }
+
+        template <typename ZipIter>
         in_in_out_result<typename hpx::tuple_element<0,
                              typename ZipIter::iterator_tuple_type>::type,
             typename hpx::tuple_element<1,

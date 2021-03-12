@@ -34,26 +34,26 @@ void test_minmax_element(ExPolicy policy, IteratorTag)
     iterator end(std::end(c));
     base_iterator ref_end(std::end(c));
 
-    auto r = hpx::parallel::minmax_element(policy, iterator(std::begin(c)),
+    auto r = hpx::minmax_element(policy, iterator(std::begin(c)),
         iterator(end), std::less<std::size_t>());
-    HPX_TEST(r.first != end && r.second != end);
+    HPX_TEST(r.min != end && r.max != end);
 
-    std::pair<base_iterator, base_iterator> ref = std::minmax_element(
+    auto ref = std::minmax_element(
         std::begin(c), std::end(c), std::less<std::size_t>());
     HPX_TEST(ref.first != ref_end && ref.second != ref_end);
 
-    HPX_TEST_EQ(*ref.first, *r.first);
-    HPX_TEST_EQ(*ref.second, *r.second);
+    HPX_TEST_EQ(*ref.first, *r.min);
+    HPX_TEST_EQ(*ref.second, *r.max);
 
-    r = hpx::parallel::minmax_element(
+    r = hpx::minmax_element(
         policy, iterator(std::begin(c)), iterator(std::end(c)));
-    HPX_TEST(r.first != end && r.second != end);
+    HPX_TEST(r.min != end && r.max != end);
 
     ref = std::minmax_element(std::begin(c), std::end(c));
     HPX_TEST(ref.first != ref_end && ref.second != ref_end);
 
-    HPX_TEST_EQ(*ref.first, *r.first);
-    HPX_TEST_EQ(*ref.second, *r.second);
+    HPX_TEST_EQ(*ref.first, *r.min);
+    HPX_TEST_EQ(*ref.second, *r.max);
 }
 
 template <typename ExPolicy, typename IteratorTag>
@@ -67,28 +67,28 @@ void test_minmax_element_async(ExPolicy p, IteratorTag)
     iterator end(std::end(c));
     base_iterator ref_end(std::end(c));
 
-    auto r = hpx::parallel::minmax_element(
+    auto r = hpx::minmax_element(
         p, iterator(std::begin(c)), iterator(end), std::less<std::size_t>());
     auto rit = r.get();
-    HPX_TEST(rit.first != end && rit.second != end);
+    HPX_TEST(rit.min != end && rit.max != end);
 
-    std::pair<base_iterator, base_iterator> ref = std::minmax_element(
+    auto ref = std::minmax_element(
         std::begin(c), std::end(c), std::less<std::size_t>());
     HPX_TEST(ref.first != ref_end && ref.second != ref_end);
 
-    HPX_TEST_EQ(*ref.first, *rit.first);
-    HPX_TEST_EQ(*ref.second, *rit.second);
+    HPX_TEST_EQ(*ref.first, *rit.min);
+    HPX_TEST_EQ(*ref.second, *rit.max);
 
-    r = hpx::parallel::minmax_element(
+    r = hpx::minmax_element(
         p, iterator(std::begin(c)), iterator(std::end(c)));
     rit = r.get();
-    HPX_TEST(rit.first != end && rit.second != end);
+    HPX_TEST(rit.min != end && rit.max != end);
 
     ref = std::minmax_element(std::begin(c), std::end(c));
     HPX_TEST(ref.first != ref_end && ref.second != ref_end);
 
-    HPX_TEST_EQ(*ref.first, *rit.first);
-    HPX_TEST_EQ(*ref.second, *rit.second);
+    HPX_TEST_EQ(*ref.first, *rit.min);
+    HPX_TEST_EQ(*ref.second, *rit.max);
 }
 
 template <typename IteratorTag>
@@ -127,7 +127,7 @@ void test_minmax_element_exception(ExPolicy policy, IteratorTag)
         bool caught_exception = false;
         try
         {
-            hpx::parallel::minmax_element(policy,
+            hpx::minmax_element(policy,
                 decorated_iterator(
                     std::begin(c), []() { throw std::runtime_error("test"); }),
                 decorated_iterator(std::end(c)), std::less<std::size_t>());
@@ -150,7 +150,7 @@ void test_minmax_element_exception(ExPolicy policy, IteratorTag)
         bool caught_exception = false;
         try
         {
-            hpx::parallel::minmax_element(policy,
+            hpx::minmax_element(policy,
                 decorated_iterator(
                     std::begin(c), []() { throw std::runtime_error("test"); }),
                 decorated_iterator(std::end(c)));
@@ -185,7 +185,7 @@ void test_minmax_element_exception_async(ExPolicy p, IteratorTag)
 
         try
         {
-            auto f = hpx::parallel::minmax_element(p,
+            auto f = hpx::minmax_element(p,
                 decorated_iterator(
                     std::begin(c), []() { throw std::runtime_error("test"); }),
                 decorated_iterator(std::end(c)), std::less<std::size_t>());
@@ -216,7 +216,7 @@ void test_minmax_element_exception_async(ExPolicy p, IteratorTag)
 
         try
         {
-            auto f = hpx::parallel::minmax_element(p,
+            auto f = hpx::minmax_element(p,
                 decorated_iterator(
                     std::begin(c), []() { throw std::runtime_error("test"); }),
                 decorated_iterator(std::end(c)));
@@ -280,7 +280,7 @@ void test_minmax_element_bad_alloc(ExPolicy policy, IteratorTag)
         bool caught_exception = false;
         try
         {
-            hpx::parallel::minmax_element(policy,
+            hpx::minmax_element(policy,
                 decorated_iterator(
                     std::begin(c), []() { throw std::bad_alloc(); }),
                 decorated_iterator(std::end(c)), std::less<std::size_t>());
@@ -302,7 +302,7 @@ void test_minmax_element_bad_alloc(ExPolicy policy, IteratorTag)
         bool caught_exception = false;
         try
         {
-            hpx::parallel::minmax_element(policy,
+            hpx::minmax_element(policy,
                 decorated_iterator(
                     std::begin(c), []() { throw std::bad_alloc(); }),
                 decorated_iterator(std::end(c)));
@@ -336,7 +336,7 @@ void test_minmax_element_bad_alloc_async(ExPolicy p, IteratorTag)
 
         try
         {
-            auto f = hpx::parallel::minmax_element(p,
+            auto f = hpx::minmax_element(p,
                 decorated_iterator(
                     std::begin(c), []() { throw std::bad_alloc(); }),
                 decorated_iterator(std::end(c)), std::less<std::size_t>());
@@ -366,7 +366,7 @@ void test_minmax_element_bad_alloc_async(ExPolicy p, IteratorTag)
 
         try
         {
-            auto f = hpx::parallel::minmax_element(p,
+            auto f = hpx::minmax_element(p,
                 decorated_iterator(
                     std::begin(c), []() { throw std::bad_alloc(); }),
                 decorated_iterator(std::end(c)));
