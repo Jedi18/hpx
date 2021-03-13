@@ -21,24 +21,20 @@ namespace hpx {
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
     ///                     N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a min_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     the left argument is less than the right element.
     ///                     The signature
@@ -57,21 +53,10 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a min_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The comparisons in the parallel \a min_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a min_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a min_element algorithm returns a \a hpx::future<FwdIter>
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a FwdIter otherwise.
+    /// \returns  The \a min_element algorithm  returns \a FwdIter.
     ///           The \a min_element algorithm returns the iterator to the
     ///           smallest element in the range [first, last). If several
     ///           elements in the range are equivalent to the smallest element,
@@ -81,7 +66,7 @@ namespace hpx {
     template <typename FwdIter, typename Sent, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
     FwdIter min_element(
-        FwdIter first, Sent sent, F&& f = F(), Proj&& proj = Proj());
+        FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
     /// Finds the smallest element in the range [first, last) using the given
@@ -90,22 +75,14 @@ namespace hpx {
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
     ///                     N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
     /// \tparam Rng         The type of the source range used (deduced).
     ///                     The iterators extracted from this range type must
     ///                     meet the requirements of an forward iterator.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a min_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
     /// \param rng          Refers to the sequence of elements the algorithm
     ///                     will be applied to.
     /// \param f            The binary predicate which returns true if the
@@ -126,21 +103,10 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a min_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The comparisons in the parallel \a min_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a min_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a min_element algorithm returns a \a hpx::future<FwdIter>
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a FwdIter otherwise.
+    /// \returns  The \a min_element algorithm returns a \a hpx::traits::range_iterator<Rng>::type otherwise.
     ///           The \a min_element algorithm returns the iterator to the
     ///           smallest element in the range [first, last). If several
     ///           elements in the range are equivalent to the smallest element,
@@ -149,7 +115,7 @@ namespace hpx {
     ///
     template <typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
-    typename hpx::traits::range_traits<Rng>::iterator_type min_element(
+    typename hpx::traits::range_iterator<Rng>::type min_element(
         Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -163,9 +129,11 @@ namespace hpx {
     ///                     It describes the manner in which the execution
     ///                     of the algorithm may be parallelized and the manner
     ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
     ///                     (deduced). Unlike its sequential form, the parallel
     ///                     overload of \a min_element requires \a F to meet the
@@ -175,8 +143,10 @@ namespace hpx {
     ///
     /// \param policy       The execution policy to use for the scheduling of
     ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     the left argument is less than the right element.
     ///                     The signature
@@ -275,7 +245,7 @@ namespace hpx {
     /// fashion in unspecified threads, and indeterminately sequenced
     /// within each thread.
     ///
-    /// \returns  The \a min_element algorithm returns a \a hpx::future<FwdIter>
+    /// \returns  The \a min_element algorithm returns a \a hpx::future<hpx::traits::range_iterator<Rng>::type>
     ///           if the execution policy is of type
     ///           \a sequenced_task_policy or
     ///           \a parallel_task_policy
@@ -289,7 +259,7 @@ namespace hpx {
     template <typename ExPolicy, typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
     typename util::detail::algorithm_result<ExPolicy,
-        typename hpx::traits::range_traits<Rng>::iterator_type>::type
+        typename hpx::traits::range_iterator<Rng>::type>::type
     min_element(
         ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
@@ -300,24 +270,20 @@ namespace hpx {
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
     ///                     N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a max_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     This argument is optional and defaults to std::less.
     ///                     the left argument is less than the right element.
@@ -337,21 +303,10 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a max_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The comparisons in the parallel \a max_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a max_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a max_element algorithm returns a \a hpx::future<FwdIter>
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a FwdIter otherwise.
+    /// \returns  The \a max_element algorithm returns a \a FwdIter.
     ///           The \a max_element algorithm returns the iterator to the
     ///           smallest element in the range [first, last). If several
     ///           elements in the range are equivalent to the smallest element,
@@ -370,22 +325,14 @@ namespace hpx {
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
     ///                     N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
     /// \tparam Rng         The type of the source range used (deduced).
     ///                     The iterators extracted from this range type must
     ///                     meet the requirements of an forward iterator.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a max_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
     /// \param rng          Refers to the sequence of elements the algorithm
     ///                     will be applied to.
     /// \param f            The binary predicate which returns true if the
@@ -407,21 +354,10 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a max_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The comparisons in the parallel \a max_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a max_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a max_element algorithm returns a \a hpx::future<FwdIter>
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a FwdIter otherwise.
+    /// \returns  The \a max_element algorithm returns a \a hpx::traits::range_iterator<Rng>::type otherwise.
     ///           The \a max_element algorithm returns the iterator to the
     ///           smallest element in the range [first, last). If several
     ///           elements in the range are equivalent to the smallest element,
@@ -430,7 +366,7 @@ namespace hpx {
     ///
     template <typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
-    typename hpx::traits::range_traits<Rng>::iterator_type max_element(
+    typename hpx::traits::range_iterator<Rng>::type max_element(
         Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -444,9 +380,11 @@ namespace hpx {
     ///                     It describes the manner in which the execution
     ///                     of the algorithm may be parallelized and the manner
     ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
     ///                     (deduced). Unlike its sequential form, the parallel
     ///                     overload of \a max_element requires \a F to meet the
@@ -456,8 +394,10 @@ namespace hpx {
     ///
     /// \param policy       The execution policy to use for the scheduling of
     ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     This argument is optional and defaults to std::less.
     ///                     the left argument is less than the right element.
@@ -558,7 +498,7 @@ namespace hpx {
     /// fashion in unspecified threads, and indeterminately sequenced
     /// within each thread.
     ///
-    /// \returns  The \a max_element algorithm returns a \a hpx::future<FwdIter>
+    /// \returns  The \a max_element algorithm returns a \a hpx::future<hpx::traits::range_iterator<Rng>::type>
     ///           if the execution policy is of type
     ///           \a sequenced_task_policy or
     ///           \a parallel_task_policy
@@ -572,7 +512,7 @@ namespace hpx {
     template <typename ExPolicy, typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
     typename util::detail::algorithm_result<ExPolicy,
-        typename hpx::traits::range_traits<Rng>::iterator_type>::type
+        typename hpx::traits::range_iterator<Rng>::type>::type
     max_element(
         ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
@@ -583,24 +523,20 @@ namespace hpx {
     /// \note   Complexity: At most \a max(floor(3/2*(N-1)), 0) applications of
     ///                     the predicate, where N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a minmax_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     the left argument is less than the right element.
     ///                     This argument is optional and defaults to std::less.
@@ -620,27 +556,14 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a minmax_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The assignments in the parallel \a minmax_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a minmax_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a minmax_element algorithm returns a
-    /// \a hpx::future<tagged_pair<tag::min(FwdIter), tag::max(FwdIter)> >
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a tagged_pair<tag::min(FwdIter), tag::max(FwdIter)>
-    ///           otherwise.
-    ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
-    ///           std::make_pair(first, first) if the range is empty. If
+    /// \returns  The \a minmax_element algorithm returns a \a minmax_element_result<FwdIter, FwdIter>
+    ///           The \a minmax_element algorithm returns a min_max_result consisting of
+    ///           an iterator to the smallest element as the min element and
+    ///           an iterator to the greatest element as the max element. Returns
+    ///           minmax_element_result{first, first} if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
     ///           elements are equivalent to the largest element, the iterator
@@ -658,22 +581,14 @@ namespace hpx {
     /// \note   Complexity: At most \a max(floor(3/2*(N-1)), 0) applications of
     ///                     the predicate, where N = std::distance(first, last).
     ///
-    /// \tparam ExPolicy    The type of the execution policy to use (deduced).
-    ///                     It describes the manner in which the execution
-    ///                     of the algorithm may be parallelized and the manner
-    ///                     in which it executes the assignments.
     /// \tparam Rng         The type of the source range used (deduced).
     ///                     The iterators extracted from this range type must
     ///                     meet the requirements of an forward iterator.
     /// \tparam F           The type of the function/function object to use
-    ///                     (deduced). Unlike its sequential form, the parallel
-    ///                     overload of \a minmax_element requires \a F to meet the
-    ///                     requirements of \a CopyConstructible.
+    ///                     (deduced).
     /// \tparam Proj        The type of an optional projection function. This
     ///                     defaults to \a util::projection_identity
     ///
-    /// \param policy       The execution policy to use for the scheduling of
-    ///                     the iterations.
     /// \param rng          Refers to the sequence of elements the algorithm
     ///                     will be applied to.
     /// \param f            The binary predicate which returns true if the
@@ -695,27 +610,14 @@ namespace hpx {
     ///                     projection operation before the actual predicate
     ///                     \a is invoked.
     ///
-    /// The comparisons in the parallel \a minmax_element algorithm invoked with
-    /// an execution policy object of type \a sequenced_policy
+    /// The assignments in the parallel \a minmax_element algorithm
     /// execute in sequential order in the calling thread.
     ///
-    /// The comparisons in the parallel \a minmax_element algorithm invoked with
-    /// an execution policy object of type \a parallel_policy or
-    /// \a parallel_task_policy are permitted to execute in an unordered
-    /// fashion in unspecified threads, and indeterminately sequenced
-    /// within each thread.
-    ///
-    /// \returns  The \a minmax_element algorithm returns a
-    /// \a hpx::future<tagged_pair<tag::min(FwdIter), tag::max(FwdIter)> >
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a tagged_pair<tag::min(FwdIter), tag::max(FwdIter)>
-    ///           otherwise.
-    ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
-    ///           std::make_pair(first, first) if the range is empty. If
+    /// \returns  The \a minmax_element algorithm returns a \a minmax_element_result<hpx::traits::range_iterator<Rng>::type
+    /// , hpx::traits::range_iterator<Rng>::type>
+    ///           The \a minmax_element algorithm returns a min_max_result consisting of
+    ///           an range iterator to the smallest element as the min element and
+    ///           an range iterator to the greatest element as the max element. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
     ///           elements are equivalent to the largest element, the iterator
@@ -724,8 +626,8 @@ namespace hpx {
     template <typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
         typename minmax_element_result<
-            typename hpx::traits::range_traits<Rng>::iterator_type,
-            typename hpx::traits::range_traits<Rng>::iterator_type> >
+            typename hpx::traits::range_iterator<Rng>::type,
+            typename hpx::traits::range_iterator<Rng>::type> >
         ::type minmax_element(Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -739,9 +641,11 @@ namespace hpx {
     ///                     It describes the manner in which the execution
     ///                     of the algorithm may be parallelized and the manner
     ///                     in which it executes the assignments.
-    /// \tparam Rng         The type of the source range used (deduced).
-    ///                     The iterators extracted from this range type must
+    /// \tparam FwdIter     The type of the source iterator used (deduced).
+    ///                     The iterator type must
     ///                     meet the requirements of an forward iterator.
+    /// \tparam Sent        The type of the end iterators used (deduced). This
+    ///                     sentinel type must be a sentinel for FwdIter.
     /// \tparam F           The type of the function/function object to use
     ///                     (deduced). Unlike its sequential form, the parallel
     ///                     overload of \a minmax_element requires \a F to meet the
@@ -751,8 +655,10 @@ namespace hpx {
     ///
     /// \param policy       The execution policy to use for the scheduling of
     ///                     the iterations.
-    /// \param rng          Refers to the sequence of elements the algorithm
-    ///                     will be applied to.
+    /// \param first        Refers to the beginning of the sequence of elements
+    ///                     the algorithm will be applied to.
+    /// \param last         Refers to the end of the sequence of elements the
+    ///                     algorithm will be applied to.
     /// \param f            The binary predicate which returns true if the
     ///                     the left argument is less than the right element.
     ///                     This argument is optional and defaults to std::less.
@@ -782,17 +688,11 @@ namespace hpx {
     /// fashion in unspecified threads, and indeterminately sequenced
     /// within each thread.
     ///
-    /// \returns  The \a minmax_element algorithm returns a
-    /// \a hpx::future<tagged_pair<tag::min(FwdIter), tag::max(FwdIter)> >
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a tagged_pair<tag::min(FwdIter), tag::max(FwdIter)>
-    ///           otherwise.
-    ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
-    ///           std::make_pair(first, first) if the range is empty. If
+    /// \returns  The \a minmax_element algorithm returns a \a minmax_element_result<FwdIter, FwdIter>
+    ///           The \a minmax_element algorithm returns a min_max_result consisting of
+    ///           an iterator to the smallest element as the min element and
+    ///           an iterator to the greatest element as the max element. Returns
+    ///           minmax_element_result{first, first} if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
     ///           elements are equivalent to the largest element, the iterator
@@ -859,17 +759,11 @@ namespace hpx {
     /// fashion in unspecified threads, and indeterminately sequenced
     /// within each thread.
     ///
-    /// \returns  The \a minmax_element algorithm returns a
-    /// \a hpx::future<tagged_pair<tag::min(FwdIter), tag::max(FwdIter)> >
-    ///           if the execution policy is of type
-    ///           \a sequenced_task_policy or
-    ///           \a parallel_task_policy
-    ///           and returns \a tagged_pair<tag::min(FwdIter), tag::max(FwdIter)>
-    ///           otherwise.
-    ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
-    ///           std::make_pair(first, first) if the range is empty. If
+    /// \returns  The \a minmax_element algorithm returns a \a minmax_element_result<hpx::traits::range_iterator<Rng>::type
+    /// , hpx::traits::range_iterator<Rng>::type>
+    ///           The \a minmax_element algorithm returns a min_max_result consisting of
+    ///           an range iterator to the smallest element as the min element and
+    ///           an range iterator to the greatest element as the max element. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
     ///           elements are equivalent to the largest element, the iterator
@@ -878,8 +772,8 @@ namespace hpx {
     template <typename ExPolicy, typename Rng, typename F,
         typename Proj = hpx::parallel::util::projection_identity>
     typename util::detail::algorithm_result<ExPolicy,
-        minmax_element_result<typename hpx::traits::range_traits<Rng>::type,
-            typename hpx::traits::range_traits<Rng>::type>>::type
+        minmax_element_result<typename hpx::traits::range_iterator<Rng>::type,
+            typename hpx::traits::range_iterator<Rng>::type>>::type
     minmax_element(
         ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
@@ -929,7 +823,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::min_element<
-            typename hpx::traits::range_traits<Rng>::iterator_type>.call(std::forward<ExPolicy>(policy), is_seq(),
+            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
                 hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
     }
 
@@ -957,7 +851,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::max_element<
-            typename hpx::traits::range_traits<Rng>::iterator_type>.call(std::forward<ExPolicy>(policy), is_seq(),
+            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
                 hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
     }
 
@@ -971,25 +865,27 @@ namespace hpx { namespace parallel { inline namespace v1 {
     // clang-format off
     template <typename ExPolicy, typename Rng,
         typename Proj = util::projection_identity, typename F = detail::less,
-        HPX_CONCEPT_REQUIRES_(hpx::is_execution_policy<ExPolicy>::value&&
-                hpx::traits::is_range<Rng>::value&& traits::is_projected_range<
-                    Proj, Rng>::value&& traits::is_indirect_callable<ExPolicy,
-                    F, traits::projected_range<Proj, Rng>,
-                    traits::projected_range<Proj, Rng>>::value)>
+        HPX_CONCEPT_REQUIRES_(
+            hpx::is_execution_policy<ExPolicy>::value &&
+            hpx::traits::is_range<Rng>::value &&
+            traits::is_projected_range<Proj, Rng>::value &&
+            traits::is_indirect_callable<ExPolicy, F,
+                traits::projected_range<Proj, Rng>,
+                traits::projected_range<Proj, Rng>>::value)>
     // clang-format on
     HPX_DEPRECATED_V(1, 7,
         "hpx::parallel::minmax_element is deprecated, use "
         "hpx::ranges::minmax_element instead")
         typename util::detail::algorithm_result<ExPolicy,
             minmax_element_result<
-                typename hpx::traits::range_traits<Rng>::type>>::type
+                typename hpx::traits::range_iterator<Rng>::type>>::type
         minmax_element(
             ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj())
     {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::minmax_element<
-            typename hpx::traits::range_traits<Rng>::iterator_type>.call(std::forward<ExPolicy>(policy), is_seq(),
+            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
                 hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
     }
 
@@ -1019,15 +915,11 @@ namespace hpx { namespace ranges {
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected<Proj, FwdIter>
-                >::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
             )>
         // clang-format on
         friend FwdIter tag_fallback_invoke(hpx::ranges::min_element_t,
-            FwdIter first, Sent last, F&& f, Proj&& proj = Proj())
+            FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Required at least forward iterator.");
@@ -1043,11 +935,7 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<F, Rng>::value &&
-                hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected_range<Proj, Rng>
-                >::value
+                hpx::parallel::traits::is_projected_range<F, Rng>::value
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
@@ -1074,15 +962,13 @@ namespace hpx { namespace ranges {
                 hpx::is_execution_policy<ExPolicy>::value &&
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                    F, hpx::parallel::traits::projected<Proj, FwdIter>>::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
         tag_fallback_invoke(hpx::ranges::min_element_t, ExPolicy&& policy,
-            FwdIter first, Sent last, F&& f, Proj&& proj = Proj())
+            FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -1102,14 +988,15 @@ namespace hpx { namespace ranges {
                 hpx::is_execution_policy<ExPolicy>::value &&
                 hpx::traits::is_range<Rng>::value &&
                 hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
-                hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                    F, hpx::parallel::traits::projected_range<Proj, Rng>>::value
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             typename hpx::traits::range_iterator<Rng>::type>::type
         tag_fallback_invoke(hpx::ranges::min_element_t, ExPolicy&& policy,
-            Rng&& rng, F&& f, Proj&& proj = Proj())
+            Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
                 (hpx::traits::is_forward_iterator<
@@ -1139,14 +1026,11 @@ namespace hpx { namespace ranges {
                 HPX_CONCEPT_REQUIRES_(
                     hpx::traits::is_iterator<FwdIter>::value &&
                     hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected<Proj, FwdIter>>::value
+                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value
                 )>
         // clang-format on
         friend FwdIter tag_fallback_invoke(hpx::ranges::max_element_t,
-            FwdIter first, Sent last, F&& f, Proj&& proj = Proj())
+            FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Required at least forward iterator.");
@@ -1157,16 +1041,13 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename Rng,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::traits::is_range<Rng>::value &&
-                    hpx::parallel::traits::is_projected_range<F, Rng>::value &&
-                    hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
-                )>
+        template <typename Rng,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_range<Rng>::value &&
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value
+            )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
         tag_fallback_invoke(hpx::ranges::max_element_t, Rng&& rng, F&& f = F(),
@@ -1192,15 +1073,13 @@ namespace hpx { namespace ranges {
                     hpx::is_execution_policy<ExPolicy>::value &&
                     hpx::traits::is_iterator<FwdIter>::value &&
                     hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                        F, hpx::parallel::traits::projected<Proj, FwdIter>>::value
+                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value
                 )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
         tag_fallback_invoke(hpx::ranges::max_element_t, ExPolicy&& policy,
-            FwdIter first, Sent last, F&& f, Proj&& proj = Proj())
+            FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -1213,21 +1092,22 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename ExPolicy, typename Rng,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::is_execution_policy<ExPolicy>::value &&
-                    hpx::traits::is_range<Rng>::value &&
-                    hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
-                    hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                        F, hpx::parallel::traits::projected_range<Proj, Rng>>::value
-                )>
+        template <typename ExPolicy, typename Rng,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::is_execution_policy<ExPolicy>::value &&
+                hpx::traits::is_range<Rng>::value &&
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
+            )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             typename hpx::traits::range_iterator<Rng>::type>::type
         tag_fallback_invoke(hpx::ranges::max_element_t, ExPolicy&& policy,
-            Rng&& rng, F&& f, Proj&& proj = Proj())
+            Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
                 (hpx::traits::is_forward_iterator<
@@ -1251,21 +1131,18 @@ namespace hpx { namespace ranges {
     {
     private:
         // clang-format off
-            template <typename FwdIter, typename Sent,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::traits::is_iterator<FwdIter>::value &&
-                    hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected<Proj, FwdIter>>::value
-                )>
+        template <typename FwdIter, typename Sent,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+            )>
         // clang-format on
-        friend typename minmax_element_result<FwdIter>::type
-        tag_fallback_invoke(hpx::ranges::minmax_element_t, FwdIter first,
-            Sent last, F&& f, Proj&& proj = Proj())
+        friend minmax_element_result<FwdIter> tag_fallback_invoke(
+            hpx::ranges::minmax_element_t, FwdIter first, Sent last,
+            F&& f = F(), Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Required at least forward iterator.");
@@ -1276,19 +1153,16 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename Rng,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::traits::is_range<Rng>::value &&
-                    hpx::parallel::traits::is_projected_range<F, Rng>::value &&
-                    hpx::parallel::traits::is_indirect_callable<
-                    hpx::execution::sequenced_policy, F,
-                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
-                )>
+        template <typename Rng,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_range<Rng>::value &&
+                hpx::parallel::traits::is_projected_range<F, Rng>::value
+            )>
         // clang-format on
         friend minmax_element_result<
-            typename hpx::traits::range_traits<Rng>::iterator_type>
+            typename hpx::traits::range_iterator<Rng>::type>
         tag_fallback_invoke(hpx::ranges::minmax_element_t, Rng&& rng,
             F&& f = F(), Proj&& proj = Proj())
         {
@@ -1305,22 +1179,20 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename ExPolicy, typename FwdIter, typename Sent,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::is_execution_policy<ExPolicy>::value &&
-                    hpx::traits::is_iterator<FwdIter>::value &&
-                    hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                        F, hpx::parallel::traits::projected<Proj, FwdIter>>::value
-                )>
+        template <typename ExPolicy, typename FwdIter, typename Sent,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::is_execution_policy<ExPolicy>::value &&
+                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+            )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             typename minmax_element_result<FwdIter>::type>::type
         tag_fallback_invoke(hpx::ranges::minmax_element_t, ExPolicy&& policy,
-            FwdIter first, Sent last, F&& f, Proj&& proj = Proj())
+            FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
@@ -1333,22 +1205,23 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename ExPolicy, typename Rng,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::is_execution_policy<ExPolicy>::value &&
-                    hpx::traits::is_range<Rng>::value &&
-                    hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
-                    hpx::parallel::traits::is_indirect_callable<ExPolicy,
-                        F, hpx::parallel::traits::projected_range<Proj, Rng>>::value
-                )>
+        template <typename ExPolicy, typename Rng,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::is_execution_policy<ExPolicy>::value &&
+                hpx::traits::is_range<Rng>::value &&
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
+            )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
-            typename minmax_element_result<typename hpx::traits::range_traits<
-                Rng>::iterator_type>::type>::type
+            minmax_element_result<
+                typename hpx::traits::range_iterator<Rng>::type>>::type
         tag_fallback_invoke(hpx::ranges::minmax_element_t, ExPolicy&& policy,
-            Rng&& rng, F&& f, Proj&& proj = Proj())
+            Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
                 (hpx::traits::is_forward_iterator<

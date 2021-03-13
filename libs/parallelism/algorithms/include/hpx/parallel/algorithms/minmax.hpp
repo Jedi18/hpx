@@ -268,18 +268,18 @@ namespace hpx {
     /// execute in sequential order in the calling thread.
     ///
     /// \returns  The \a minmax_element algorithm returns a
-    ///           \a hpx::parallel::util::in_in_out_result<FwdIter, FwdIter>
+    ///           \a minmax_element_result<FwdIter>
     ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
-    ///           std::make_pair(first, first) if the range is empty. If
+    ///           an iterator to the smallest element as the min element and
+    ///           an iterator to the greatest element as the max element. Returns
+    ///           minmax_element_result<FwdIter>{first, first} if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
     ///           elements are equivalent to the largest element, the iterator
     ///           to the last such element is returned.
     ///
     template <typename FwdIter, typename F>
-    hpx::parallel::util::in_out_result<FwdIter, FwdIter> minmax_element(
+    minmax_element_result<FwdIter> minmax_element(
         FwdIter first, FwdIter last, F&& f);
 
     /////////////////////////////////////////////////////////////////////////////
@@ -339,15 +339,15 @@ namespace hpx {
     /// within each thread.
     ///
     /// \returns  The \a minmax_element algorithm returns a
-    /// \a hpx::parallel::util::in_in_out_result<FwdIter, FwdIter>
+    /// \a minmax_element_result<FwdIter><FwdIter>
     ///           if the execution policy is of type
     ///           \a sequenced_task_policy or
     ///           \a parallel_task_policy
-    ///           and returns \a hpx::parallel::util::in_in_out_result<FwdIter, FwdIter>
+    ///           and returns \a minmax_element_result<FwdIter>
     ///           otherwise.
     ///           The \a minmax_element algorithm returns a pair consisting of
-    ///           an iterator to the smallest element as the first element and
-    ///           an iterator to the greatest element as the second. Returns
+    ///           an iterator to the smallest element as the min element and
+    ///           an iterator to the greatest element as the max element. Returns
     ///           std::make_pair(first, first) if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
@@ -356,7 +356,7 @@ namespace hpx {
     ///
     template <typename ExPolicy, typename FwdIter, typename F>
     typename util::detail::algorithm_result<ExPolicy,
-        hpx::parallel::util::minmax_element_result<FwdIter>>::type
+        minmax_element_result<FwdIter>>::type
     minmax_element(ExPolicy&& policy, FwdIter first, FwdIter last, F&& f);
 
 }    // namespace hpx
@@ -747,9 +747,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
             static minmax_element_result<FwdIter> sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                std::pair<FwdIter, FwdIter> result = std::minmax_element(first, last,
-                    util::compare_projected<F, Proj>(
-                        std::forward<F>(f), std::forward<Proj>(proj)));
+                std::pair<FwdIter, FwdIter> result =
+                    std::minmax_element(first, last,
+                        util::compare_projected<F, Proj>(
+                            std::forward<F>(f), std::forward<Proj>(proj)));
                 return minmax_element_result<FwdIter>{
                     result.first, result.second};
             }
@@ -815,9 +816,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
     HPX_DEPRECATED_V(1, 7,
         "hpx::parallel::minmax_element is deprecated, use hpx::minmax_element "
         "instead") typename util::detail::algorithm_result<ExPolicy,
-        minmax_element_result<FwdIter>>::type
-        minmax_element(ExPolicy&& policy, FwdIter first, FwdIter last,
-            F&& f = F(), Proj&& proj = Proj())
+        minmax_element_result<FwdIter>>::type minmax_element(ExPolicy&& policy,
+        FwdIter first, FwdIter last, F&& f = F(), Proj&& proj = Proj())
     {
         static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
             "Requires at least forward iterator.");
