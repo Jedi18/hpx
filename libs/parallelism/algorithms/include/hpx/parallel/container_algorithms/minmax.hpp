@@ -915,7 +915,12 @@ namespace hpx { namespace ranges {
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
             )>
         // clang-format on
         friend FwdIter tag_fallback_invoke(hpx::ranges::min_element_t,
@@ -935,7 +940,12 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<F, Rng>::value
+                hpx::parallel::traits::is_projected_range<F, Rng>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
@@ -962,7 +972,11 @@ namespace hpx { namespace ranges {
                 hpx::is_execution_policy<ExPolicy>::value &&
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
@@ -990,7 +1004,8 @@ namespace hpx { namespace ranges {
                 hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
                 hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>,
-                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
@@ -1026,7 +1041,12 @@ namespace hpx { namespace ranges {
                 HPX_CONCEPT_REQUIRES_(
                     hpx::traits::is_iterator<FwdIter>::value &&
                     hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                    hpx::parallel::traits::is_indirect_callable<
+                        hpx::execution::sequenced_policy, F,
+                        hpx::parallel::traits::projected<Proj, FwdIter>,
+                        hpx::parallel::traits::projected<Proj, FwdIter>
+                    >::value
                 )>
         // clang-format on
         friend FwdIter tag_fallback_invoke(hpx::ranges::max_element_t,
@@ -1046,7 +1066,12 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<Proj, Rng>::value
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
@@ -1073,7 +1098,11 @@ namespace hpx { namespace ranges {
                     hpx::is_execution_policy<ExPolicy>::value &&
                     hpx::traits::is_iterator<FwdIter>::value &&
                     hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                    hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                        hpx::parallel::traits::projected<Proj, FwdIter>,
+                        hpx::parallel::traits::projected<Proj, FwdIter>
+                    >::value
                 )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
@@ -1101,7 +1130,8 @@ namespace hpx { namespace ranges {
                 hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
                 hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>,
-                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
@@ -1137,7 +1167,12 @@ namespace hpx { namespace ranges {
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
             )>
         // clang-format on
         friend minmax_element_result<FwdIter> tag_fallback_invoke(
@@ -1158,7 +1193,12 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<F, Rng>::value
+                hpx::parallel::traits::is_projected_range<F, Rng>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected_range<Proj, Rng>,
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend minmax_element_result<
@@ -1186,7 +1226,11 @@ namespace hpx { namespace ranges {
                 hpx::is_execution_policy<ExPolicy>::value &&
                 hpx::traits::is_iterator<FwdIter>::value &&
                 hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                hpx::traits::is_sentinel_for<Sent, FwdIter>::value
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
@@ -1214,7 +1258,8 @@ namespace hpx { namespace ranges {
                 hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
                 hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>,
-                    hpx::parallel::traits::projected_range<Proj, Rng>>::value
+                    hpx::parallel::traits::projected_range<Proj, Rng>
+                >::value
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
