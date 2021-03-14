@@ -245,9 +245,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    positions.push_back(
-                        minmax_element_result(traits::compose(send, out.first),
-                            traits::compose(send, out.second)));
+                    result_type res = {traits::compose(send, out.first),
+                        traits::compose(send, out.second)};
+                    positions.push_back(res);
                 }
             }
             else
@@ -261,9 +261,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    positions.push_back(
-                        minmax_element_result(traits::compose(sit, out.first),
-                            traits::compose(sit, out.second)));
+                    result_type res = {traits::compose(sit, out.first),
+                        traits::compose(sit, out.second)};
+                    positions.push_back(res);
                 }
 
                 // handle all of the full partitions
@@ -278,9 +278,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             dispatch(traits::get_id(sit), algo, policy,
                                 std::true_type(), beg, end, f, proj);
 
-                        positions.push_back(minmax_element_result(
-                            traits::compose(sit, out.first),
-                            traits::compose(sit, out.second)));
+                        result_type res = {traits::compose(sit, out.first),
+                            traits::compose(sit, out.second)};
+                        positions.push_back(res);
                     }
                 }
 
@@ -292,9 +292,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    positions.push_back(
-                        minmax_element_result(traits::compose(sit, out.first),
-                            traits::compose(sit, out.second)));
+                    result_type res = {traits::compose(sit, out.first),
+                        traits::compose(sit, out.second)};
+                    positions.push_back(res);
                 }
             }
 
@@ -341,9 +341,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                         dispatch_async(traits::get_id(sit), algo, policy,
                             forced_seq(), beg, end, f, proj),
                         [send](local_iterator_pair_type out) -> result_type {
-                            return minmax_element_result(
-                                traits::compose(send, out.first),
-                                traits::compose(send, out.second));
+                            result_type res = {traits::compose(send, out.first),
+                                traits::compose(send, out.second)};
+                            return res;
                         }));
                 }
             }
@@ -359,9 +359,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             forced_seq(), beg, end, f, proj),
                         [sit](local_iterator_pair_type const& out)
                             -> result_type {
-                            return minmax_element_result(
-                                traits::compose(sit, out.first),
-                                traits::compose(sit, out.second));
+                            result_type res = {traits::compose(sit, out.first),
+                                traits::compose(sit, out.second)};
+                            return res;
                         }));
                 }
 
@@ -377,9 +377,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
                                 forced_seq(), beg, end, f, proj),
                             [sit](local_iterator_pair_type const& out)
                                 -> result_type {
-                                return minmax_element_result(
+                                result_type res = {
                                     traits::compose(sit, out.first),
-                                    traits::compose(sit, out.second));
+                                    traits::compose(sit, out.second)};
+                                return res;
                             }));
                     }
                 }
@@ -394,9 +395,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             forced_seq(), beg, end, f, proj),
                         [sit](local_iterator_pair_type const& out)
                             -> result_type {
-                            return minmax_element_result(
-                                traits::compose(sit, out.first),
-                                traits::compose(sit, out.second));
+                            result_type res = {traits::compose(sit, out.first),
+                                traits::compose(sit, out.second)};
+                            return res;
                         }));
                 }
             }
@@ -598,7 +599,7 @@ namespace hpx { namespace segmented {
         if (first == last || ++first == last)
         {
             result_type result = {first, first};
-            return util::detail::algorithm_result<ExPolicy, result_type>::get(
+            return hpx::parallel::util::detail::algorithm_result<ExPolicy, result_type>::get(
                 std::move(result));
         }
 

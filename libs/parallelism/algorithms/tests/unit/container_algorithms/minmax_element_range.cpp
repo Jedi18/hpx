@@ -21,6 +21,38 @@
 #include "test_utils.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
+template <typename IteratorTag>
+void test_minmax_element(IteratorTag)
+{
+    typedef std::vector<std::size_t>::iterator base_iterator;
+
+    typedef test::test_container<std::vector<std::size_t>, IteratorTag>
+        test_vector;
+
+    test_vector c = test::random_iota(10007);
+
+    base_iterator ref_end(std::end(c.base()));
+
+    auto r = hpx::ranges::minmax_element(c, std::less<std::size_t>());
+    HPX_TEST(r.min != std::end(c) && r.max != std::end(c));
+
+    std::pair<base_iterator, base_iterator> ref = std::minmax_element(
+        std::begin(c.base()), std::end(c.base()), std::less<std::size_t>());
+    HPX_TEST(ref.first != ref_end && ref.second != ref_end);
+
+    HPX_TEST_EQ(*ref.first, *r.min);
+    HPX_TEST_EQ(*ref.second, *r.max);
+
+    r = hpx::ranges::minmax_element(c);
+    HPX_TEST(r.min != std::end(c) && r.max != std::end(c));
+
+    ref = std::minmax_element(std::begin(c.base()), std::end(c.base()));
+    HPX_TEST(ref.first != ref_end && ref.second != ref_end);
+
+    HPX_TEST_EQ(*ref.first, *r.min);
+    HPX_TEST_EQ(*ref.second, *r.max);
+}
+
 template <typename ExPolicy, typename IteratorTag>
 void test_minmax_element(ExPolicy policy, IteratorTag)
 {
@@ -95,6 +127,7 @@ void test_minmax_element()
 {
     using namespace hpx::execution;
 
+    test_minmax_element(IteratorTag());
     test_minmax_element(seq, IteratorTag());
     test_minmax_element(par, IteratorTag());
     test_minmax_element(par_unseq, IteratorTag());
@@ -110,6 +143,66 @@ void minmax_element_test()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+template <typename IteratorTag>
+void test_minmax_element_exception(IteratorTag)
+{
+    typedef std::vector<std::size_t>::iterator base_iterator;
+    typedef test::decorated_iterator<base_iterator, IteratorTag>
+        decorated_iterator;
+
+    std::vector<std::size_t> c = test::random_iota(10007);
+
+    {
+        bool caught_exception = false;
+        try
+        {
+            hpx::ranges::minmax_element(
+                hpx::util::make_iterator_range(
+                    decorated_iterator(std::begin(c),
+                        []() { throw std::runtime_error("test"); }),
+                    decorated_iterator(std::end(c))),
+                std::less<std::size_t>());
+
+            HPX_TEST(false);
+        }
+        catch (hpx::exception_list const& e)
+        {
+            caught_exception = true;
+            test::test_num_exceptions<hpx::execution::sequenced_policy,
+                IteratorTag>::call(hpx::execution::seq, e);
+        }
+        catch (...)
+        {
+            HPX_TEST(false);
+        }
+        HPX_TEST(caught_exception);
+    }
+
+    {
+        bool caught_exception = false;
+        try
+        {
+            hpx::ranges::minmax_element(hpx::util::make_iterator_range(
+                decorated_iterator(
+                    std::begin(c), []() { throw std::runtime_error("test"); }),
+                decorated_iterator(std::end(c))));
+
+            HPX_TEST(false);
+        }
+        catch (hpx::exception_list const& e)
+        {
+            caught_exception = true;
+            test::test_num_exceptions<hpx::execution::sequenced_policy,
+                IteratorTag>::call(hpx::execution::seq, e);
+        }
+        catch (...)
+        {
+            HPX_TEST(false);
+        }
+        HPX_TEST(caught_exception);
+    }
+}
+
 template <typename ExPolicy, typename IteratorTag>
 void test_minmax_element_exception(ExPolicy policy, IteratorTag)
 {
@@ -255,6 +348,7 @@ void test_minmax_element_exception()
     // If the execution policy object is of type vector_execution_policy,
     // std::terminate shall be called. therefore we do not test exceptions
     // with a vector execution policy
+    test_minmax_element_exception(IteratorTag());
     test_minmax_element_exception(seq, IteratorTag());
     test_minmax_element_exception(par, IteratorTag());
 
@@ -269,6 +363,62 @@ void minmax_element_exception_test()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+template <typename IteratorTag>
+void test_minmax_element_bad_alloc(IteratorTag)
+{
+    typedef std::vector<std::size_t>::iterator base_iterator;
+    typedef test::decorated_iterator<base_iterator, IteratorTag>
+        decorated_iterator;
+
+    std::vector<std::size_t> c = test::random_iota(10007);
+
+    {
+        bool caught_exception = false;
+        try
+        {
+            hpx::ranges::minmax_element(
+                hpx::util::make_iterator_range(
+                    decorated_iterator(
+                        std::begin(c), []() { throw std::bad_alloc(); }),
+                    decorated_iterator(std::end(c))),
+                std::less<std::size_t>());
+
+            HPX_TEST(false);
+        }
+        catch (std::bad_alloc const&)
+        {
+            caught_exception = true;
+        }
+        catch (...)
+        {
+            HPX_TEST(false);
+        }
+        HPX_TEST(caught_exception);
+    }
+
+    {
+        bool caught_exception = false;
+        try
+        {
+            hpx::ranges::minmax_element(hpx::util::make_iterator_range(
+                decorated_iterator(
+                    std::begin(c), []() { throw std::bad_alloc(); }),
+                decorated_iterator(std::end(c))));
+
+            HPX_TEST(false);
+        }
+        catch (std::bad_alloc const&)
+        {
+            caught_exception = true;
+        }
+        catch (...)
+        {
+            HPX_TEST(false);
+        }
+        HPX_TEST(caught_exception);
+    }
+}
+
 template <typename ExPolicy, typename IteratorTag>
 void test_minmax_element_bad_alloc(ExPolicy policy, IteratorTag)
 {
@@ -410,6 +560,7 @@ void test_minmax_element_bad_alloc()
     // If the execution policy object is of type vector_execution_policy,
     // std::terminate shall be called. therefore we do not test exceptions
     // with a vector execution policy
+    test_minmax_element_bad_alloc(IteratorTag());
     test_minmax_element_bad_alloc(seq, IteratorTag());
     test_minmax_element_bad_alloc(par, IteratorTag());
 

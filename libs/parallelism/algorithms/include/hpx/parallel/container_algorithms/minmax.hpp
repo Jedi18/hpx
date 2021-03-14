@@ -823,8 +823,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::min_element<
-            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+            typename hpx::traits::range_iterator<Rng>::type>()
+            .call(std::forward<ExPolicy>(policy), is_seq(),
+                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+                std::forward<Proj>(proj));
     }
 
     // clang-format off
@@ -851,8 +853,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::max_element<
-            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+            typename hpx::traits::range_iterator<Rng>::type>()
+            .call(std::forward<ExPolicy>(policy), is_seq(),
+                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+                std::forward<Proj>(proj));
     }
 
 #if defined(HPX_MSVC)
@@ -885,8 +889,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
         return hpx::parallel::v1::detail::minmax_element<
-            typename hpx::traits::range_iterator<Rng>::type>.call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+            typename hpx::traits::range_iterator<Rng>::type>()
+            .call(std::forward<ExPolicy>(policy), is_seq(),
+                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+                std::forward<Proj>(proj));
     }
 
 #if defined(HPX_MSVC)
@@ -940,7 +946,7 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<F, Rng>::value &&
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
                 hpx::parallel::traits::is_indirect_callable<
                     hpx::execution::sequenced_policy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>,
@@ -1193,7 +1199,7 @@ namespace hpx { namespace ranges {
             typename Proj = hpx::parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::traits::is_range<Rng>::value &&
-                hpx::parallel::traits::is_projected_range<F, Rng>::value &&
+                hpx::parallel::traits::is_projected_range<Proj, Rng>::value &&
                 hpx::parallel::traits::is_indirect_callable<
                     hpx::execution::sequenced_policy, F,
                     hpx::parallel::traits::projected_range<Proj, Rng>,
