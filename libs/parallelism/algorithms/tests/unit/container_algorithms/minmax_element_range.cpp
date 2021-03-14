@@ -18,7 +18,71 @@
 #include <utility>
 #include <vector>
 
+#include "iter_sent.hpp"
 #include "test_utils.hpp"
+
+///////////////////////////////////////////////////////////////////////////////
+void test_minmax_element_sent()
+{
+    using hpx::get;
+
+    auto c = test::random_iota(100);
+    auto ref = std::minmax_element(std::begin(c), std::begin(c) + 50);
+    auto r = hpx::ranges::minmax_element(
+        std::begin(c), sentinel<size_t>{*(std::begin(c) + 50)});
+
+    HPX_TEST((r.min == ref.first) && (r.max == ref.second));
+
+    auto c1 = std::vector<size_t>{5, 7, 8};
+    ref = std::minmax_element(
+        std::begin(c1), std::begin(c1) + 2, std::greater<std::size_t>());
+    r = hpx::ranges::minmax_element(
+        std::begin(c1), sentinel<size_t>{8}, std::greater<std::size_t>());
+
+    HPX_TEST((r.min == ref.first) && (r.max == ref.second));
+
+    auto c2 = std::vector<size_t>{2, 2, 2};
+    r = hpx::ranges::minmax_element(std::begin(c2), sentinel<size_t>{2});
+    HPX_TEST((r.min == std::begin(c2)) && (r.max == std::begin(c2)));
+
+    auto c3 = std::vector<size_t>{2, 3, 3, 4};
+    r = hpx::ranges::minmax_element(std::begin(c3), sentinel<size_t>{3});
+    HPX_TEST((*r.min == 2) && (*r.max == 2));
+}
+
+template <typename ExPolicy>
+void test_minmax_element_sent(ExPolicy policy)
+{
+    static_assert(hpx::is_execution_policy<ExPolicy>::value,
+        "hpx::is_execution_policy<ExPolicy>::value");
+
+    using hpx::get;
+
+    auto c = test::random_iota(100);
+    auto ref = std::minmax_element(std::begin(c), std::begin(c) + 50);
+    auto r = hpx::ranges::minmax_element(
+        policy, std::begin(c), sentinel<size_t>{*(std::begin(c) + 50)});
+
+    HPX_TEST((r.min == ref.first) && (r.max == ref.second));
+
+    auto c1 = std::vector<size_t>{5, 7, 8};
+    ref = std::minmax_element(
+        std::begin(c1), std::begin(c1) + 2, std::greater<std::size_t>());
+    r = hpx::ranges::minmax_element(policy, std::begin(c1), sentinel<size_t>{8},
+        std::greater<std::size_t>());
+
+    HPX_TEST((r.min == ref.first) && (r.max == ref.second));
+
+    auto c2 = std::vector<size_t>{2, 2, 2};
+    r = hpx::ranges::minmax_element(
+        policy, std::begin(c2), sentinel<size_t>{2});
+    HPX_TEST((r.min == std::begin(c2)) && (r.max == std::begin(c2)));
+
+    auto c3 = std::vector<size_t>{2, 3, 3, 4};
+    r = hpx::ranges::minmax_element(
+        policy, std::begin(c3), sentinel<size_t>{3});
+    HPX_TEST((*r.min == 2) && (*r.max == 2));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 template <typename IteratorTag>
@@ -134,6 +198,11 @@ void test_minmax_element()
 
     test_minmax_element_async(seq(task), IteratorTag());
     test_minmax_element_async(par(task), IteratorTag());
+
+    test_minmax_element_sent();
+    test_minmax_element_sent(seq);
+    test_minmax_element_sent(par);
+    test_minmax_element_sent(par_unseq);
 }
 
 void minmax_element_test()
