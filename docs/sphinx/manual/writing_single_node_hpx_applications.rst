@@ -591,15 +591,15 @@ Parallel algorithms
      * Description
      * In header
      * Algorithm page at cppreference.com
-   * * :cpp:func:`hpx::parallel::v1::max_element`
+   * * :cpp:func:`hpx::max_element`
      * Returns the largest element in a range.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`max_element`
-   * * :cpp:func:`hpx::parallel::v1::min_element`
+   * * :cpp:func:`hpx::min_element`
      * Returns the smallest element in a range.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`min_element`
-   * * :cpp:func:`hpx::parallel::v1::minmax_element`
+   * * :cpp:func:`hpx::minmax_element`
      * Returns the smallest and the largest element in a range.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`minmax_element`
@@ -1013,4 +1013,3 @@ function enables this use case::
 without an explicit executor object. In this case the task will be run using the
 executor associated with the execution policy that was used to call
 :cpp:func:`hpx::parallel::v2::define_task_block`.
-
