@@ -460,9 +460,20 @@ namespace hpx { namespace parallel { inline namespace v1 {
             static FwdIter sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                return std::min_element(first, last,
-                    util::compare_projected<F, Proj>(
-                        std::forward<F>(f), std::forward<Proj>(proj)));
+                if (first == last)
+                    return first;
+
+                FwdIter smallest = first;
+                ++first;
+                for (; first != last; ++first)
+                {
+                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *first),
+                            hpx::util::invoke(proj, *smallest)))
+                    {
+                        smallest = first;
+                    }
+                }
+                return smallest;
             }
 
             template <typename ExPolicy, typename FwdIter, typename Sent,
@@ -596,9 +607,20 @@ namespace hpx { namespace parallel { inline namespace v1 {
             static FwdIter sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                return std::max_element(first, last,
-                    util::compare_projected<F, Proj>(
-                        std::forward<F>(f), std::forward<Proj>(proj)));
+                if (first == last)
+                    return first;
+
+                FwdIter largest = first;
+                ++first;
+                for (; first != last; ++first)
+                {
+                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *largest),
+                            hpx::util::invoke(proj, *first)))
+                    {
+                        largest = first;
+                    }
+                }
+                return largest;
             }
 
             template <typename ExPolicy, typename FwdIter, typename Sent,
@@ -747,12 +769,65 @@ namespace hpx { namespace parallel { inline namespace v1 {
             static minmax_element_result<FwdIter> sequential(
                 ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
-                std::pair<FwdIter, FwdIter> result =
-                    std::minmax_element(first, last,
-                        util::compare_projected<F, Proj>(
-                            std::forward<F>(f), std::forward<Proj>(proj)));
-                return minmax_element_result<FwdIter>{
-                    result.first, result.second};
+                auto min = first, max = first;
+
+                if (first == last || ++first == last)
+                    return minmax_element_result<FwdIter>{min, max};
+
+                if (hpx::util::invoke(f, hpx::util::invoke(proj, *first),
+                        hpx::util::invoke(proj, *min)))
+                {
+                    min = first;
+                }
+                else
+                {
+                    max = first;
+                }
+
+                while (++first != last)
+                {
+                    auto i = first;
+                    if (++first == last)
+                    {
+                        if (hpx::util::invoke(f, hpx::util::invoke(proj, *i),
+                                hpx::util::invoke(proj, *min)))
+                            min = i;
+                        else if (!(hpx::util::invoke(f,
+                                     hpx::util::invoke(proj, *i),
+                                     hpx::util::invoke(proj, *max))))
+                            max = i;
+                        break;
+                    }
+                    else
+                    {
+                        if (hpx::util::invoke(f,
+                                hpx::util::invoke(proj, *first),
+                                hpx::util::invoke(proj, *i)))
+                        {
+                            if (hpx::util::invoke(f,
+                                    hpx::util::invoke(proj, *first),
+                                    hpx::util::invoke(proj, *min)))
+                                min = first;
+                            if (!(hpx::util::invoke(f,
+                                    hpx::util::invoke(proj, *i),
+                                    hpx::util::invoke(proj, *max))))
+                                max = i;
+                        }
+                        else
+                        {
+                            if (hpx::util::invoke(f,
+                                    hpx::util::invoke(proj, *i),
+                                    hpx::util::invoke(proj, *min)))
+                                min = i;
+                            if (!(hpx::util::invoke(f,
+                                    hpx::util::invoke(proj, *first),
+                                    hpx::util::invoke(proj, *max))))
+                                max = first;
+                        }
+                    }
+                }
+
+                return minmax_element_result<FwdIter>{min, max};
             }
 
             template <typename ExPolicy, typename FwdIter, typename Sent,
