@@ -56,6 +56,15 @@ namespace hpx { namespace parallel { inline namespace v1 { namespace detail {
         typedef util::in_out_result<type1, type2> type;
     };
 
+    template <typename Result>
+    struct local_algorithm_result<util::min_max_result<Result>>
+    {
+        typedef typename hpx::traits::segmented_local_iterator_traits<
+            Result>::local_raw_iterator type1;
+
+        typedef util::min_max_result<type1> type;
+    };
+
     template <typename Result1, typename Result2, typename Result3>
     struct local_algorithm_result<hpx::tuple<Result1, Result2, Result3>>
     {

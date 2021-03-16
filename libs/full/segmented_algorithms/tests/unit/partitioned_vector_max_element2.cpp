@@ -66,8 +66,10 @@ void max_element_tests(std::vector<hpx::id_type>& localities)
     test_max_element_async(hpx::execution::par(hpx::execution::task), xvalues,
         std::less<double>(), T(7));
 
-    test_max_element(hpx::execution::seq, xvalues, std::greater<double>(), T(1));
-    test_max_element(hpx::execution::par, xvalues, std::greater<double>(), T(1));
+    test_max_element(
+        hpx::execution::seq, xvalues, std::greater<double>(), T(1));
+    test_max_element(
+        hpx::execution::par, xvalues, std::greater<double>(), T(1));
     test_max_element_async(hpx::execution::seq(hpx::execution::task), xvalues,
         std::greater<double>(), T(1));
     test_max_element_async(hpx::execution::par(hpx::execution::task), xvalues,

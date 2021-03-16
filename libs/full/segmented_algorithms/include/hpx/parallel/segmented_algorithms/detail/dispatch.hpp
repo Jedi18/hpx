@@ -271,8 +271,9 @@ namespace hpx { namespace parallel { inline namespace v1 { namespace detail {
                 [](future<arg_type>&& f)
                     -> util::min_max_result<typename traits1::local_iterator> {
                     auto&& p = f.get();
-                    return util::min_max_result<typename traits1::local_iterator>{traits1::remote(p.in),
-                            traits1::remote(p.out)};
+                    return util::min_max_result<typename traits1::local_iterator>{
+                        traits1::remote(p.min),
+                        traits1::remote(p.max)};
                 });
             // clang-format on
         }
