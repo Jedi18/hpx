@@ -993,7 +993,7 @@ namespace hpx { namespace ranges {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::min_element<FwdIter>().call(
                 std::forward<ExPolicy>(policy), is_seq(), first, last,
@@ -1024,7 +1024,7 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::min_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
@@ -1041,19 +1041,19 @@ namespace hpx { namespace ranges {
     {
     private:
         // clang-format off
-            template <typename FwdIter, typename Sent,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::traits::is_iterator<FwdIter>::value &&
-                    hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<
-                        hpx::execution::sequenced_policy, F,
-                        hpx::parallel::traits::projected<Proj, FwdIter>,
-                        hpx::parallel::traits::projected<Proj, FwdIter>
-                    >::value
-                )>
+        template <typename FwdIter, typename Sent,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
+            )>
         // clang-format on
         friend FwdIter tag_fallback_invoke(hpx::ranges::max_element_t,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
@@ -1097,19 +1097,19 @@ namespace hpx { namespace ranges {
         }
 
         // clang-format off
-            template <typename ExPolicy, typename FwdIter, typename Sent,
-                typename F = hpx::parallel::v1::detail::less,
-                typename Proj = hpx::parallel::util::projection_identity,
-                HPX_CONCEPT_REQUIRES_(
-                    hpx::is_execution_policy<ExPolicy>::value &&
-                    hpx::traits::is_iterator<FwdIter>::value &&
-                    hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
-                    hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
-                    hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
-                        hpx::parallel::traits::projected<Proj, FwdIter>,
-                        hpx::parallel::traits::projected<Proj, FwdIter>
-                    >::value
-                )>
+        template <typename ExPolicy, typename FwdIter, typename Sent,
+            typename F = hpx::parallel::v1::detail::less,
+            typename Proj = hpx::parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::is_execution_policy<ExPolicy>::value &&
+                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::parallel::traits::is_projected<Proj, FwdIter>::value &&
+                hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
+                hpx::parallel::traits::is_indirect_callable<ExPolicy, F,
+                    hpx::parallel::traits::projected<Proj, FwdIter>,
+                    hpx::parallel::traits::projected<Proj, FwdIter>
+                >::value
+            )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
@@ -1119,7 +1119,7 @@ namespace hpx { namespace ranges {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::max_element<FwdIter>().call(
                 std::forward<ExPolicy>(policy), is_seq(), first, last,
@@ -1150,7 +1150,7 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::max_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
@@ -1240,14 +1240,14 @@ namespace hpx { namespace ranges {
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
-            typename minmax_element_result<FwdIter>::type>::type
+            minmax_element_result<FwdIter>>::type
         tag_fallback_invoke(hpx::ranges::minmax_element_t, ExPolicy&& policy,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::minmax_element<FwdIter>().call(
                 std::forward<ExPolicy>(policy), is_seq(), first, last,
@@ -1279,7 +1279,7 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
+            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
             return hpx::parallel::v1::detail::minmax_element<
                 typename hpx::traits::range_iterator<Rng>::type>()

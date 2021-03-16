@@ -18,9 +18,9 @@ double compute_minmax(const std::vector<double> v)
     hpx::execution::parallel_task_policy par_policy;
     auto policy = par_policy.with(param);
 
-    auto minmaxX_ = hpx::parallel::minmax_element(policy, v.begin(), v.end());
+    auto minmaxX_ = hpx::minmax_element(policy, v.begin(), v.end());
     auto minmaxX = minmaxX_.get();
-    return *minmaxX.second - *minmaxX.first;
+    return *minmaxX.max - *minmaxX.min;
 }
 
 int hpx_main()
