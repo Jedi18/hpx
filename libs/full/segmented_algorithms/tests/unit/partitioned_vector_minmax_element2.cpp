@@ -65,7 +65,7 @@ void minmax_element_tests(std::vector<hpx::id_type>& localities)
 
     test_minmax_element(
         hpx::execution::seq, xvalues, std::less<double>(), T(1), T(7));
-    /*test_minmax_element(
+    test_minmax_element(
         hpx::execution::par, xvalues, std::less<double>(), T(1), T(7));
     test_minmax_element_async(hpx::execution::seq(hpx::execution::task),
         xvalues, std::less<double>(), T(1), T(7));
@@ -79,7 +79,7 @@ void minmax_element_tests(std::vector<hpx::id_type>& localities)
     test_minmax_element_async(hpx::execution::seq(hpx::execution::task),
         xvalues, std::greater<double>(), T(7), T(1));
     test_minmax_element_async(hpx::execution::par(hpx::execution::task),
-        xvalues, std::greater<double>(), T(7), T(1));*/
+        xvalues, std::greater<double>(), T(7), T(1));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

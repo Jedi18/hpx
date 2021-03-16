@@ -344,8 +344,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                         dispatch_async(traits::get_id(sit), algo, policy,
                             forced_seq(), beg, end, f, proj),
                         [send](local_iterator_pair_type out) -> result_type {
-                            result_type res = {traits::compose(send, out.first),
-                                traits::compose(send, out.second)};
+                            result_type res = {traits::compose(send, out.min),
+                                traits::compose(send, out.max)};
                             return res;
                         }));
                 }
@@ -362,8 +362,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             forced_seq(), beg, end, f, proj),
                         [sit](local_iterator_pair_type const& out)
                             -> result_type {
-                            result_type res = {traits::compose(sit, out.first),
-                                traits::compose(sit, out.second)};
+                            result_type res = {traits::compose(sit, out.min),
+                                traits::compose(sit, out.max)};
                             return res;
                         }));
                 }
@@ -381,8 +381,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             [sit](local_iterator_pair_type const& out)
                                 -> result_type {
                                 result_type res = {
-                                    traits::compose(sit, out.first),
-                                    traits::compose(sit, out.second)};
+                                    traits::compose(sit, out.min),
+                                    traits::compose(sit, out.max)};
                                 return res;
                             }));
                     }
@@ -398,8 +398,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             forced_seq(), beg, end, f, proj),
                         [sit](local_iterator_pair_type const& out)
                             -> result_type {
-                            result_type res = {traits::compose(sit, out.first),
-                                traits::compose(sit, out.second)};
+                            result_type res = {traits::compose(sit, out.min),
+                                traits::compose(sit, out.max)};
                             return res;
                         }));
                 }
@@ -602,8 +602,8 @@ namespace hpx { namespace segmented {
         if (first == last || ++first == last)
         {
             result_type result = {first, first};
-            return hpx::parallel::util::detail::algorithm_result<ExPolicy, result_type>::get(
-                std::move(result));
+            return hpx::parallel::util::detail::algorithm_result<ExPolicy,
+                result_type>::get(std::move(result));
         }
 
         using iterator_traits = hpx::traits::segmented_iterator_traits<SegIter>;
