@@ -899,7 +899,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
         typedef hpx::is_sequenced_execution_policy<ExPolicy> is_seq;
 
-        return detail::minmax_element<minmax_element_result<FwdIter>>().call(
+        return detail::minmax_element<FwdIter>().call(
             std::forward<ExPolicy>(policy), is_seq(), first, last,
             std::forward<F>(f), std::forward<Proj>(proj));
     }
