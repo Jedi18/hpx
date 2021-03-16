@@ -46,6 +46,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
             typedef hpx::traits::segmented_iterator_traits<SegIter> traits;
             typedef typename traits::segment_iterator segment_iterator;
             typedef typename traits::local_iterator local_iterator_type;
+            typedef util::detail::algorithm_result<ExPolicy, SegIter> result;
 
             segment_iterator sit = traits::segment(first);
             segment_iterator send = traits::segment(last);
@@ -106,8 +107,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 }
             }
 
-            return Algo::sequential_minmax_element_ind(
-                policy, positions.begin(), positions.size(), f, proj);
+            return result::get(Algo::sequential_minmax_element_ind(
+                policy, positions.begin(), positions.size(), f, proj));
         }
 
         // parallel remote implementation
@@ -226,8 +227,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
             typedef typename traits::segment_iterator segment_iterator;
             typedef typename traits::local_iterator local_iterator_type;
             typedef minmax_element_result<SegIter> result_type;
+            typedef util::detail::algorithm_result<ExPolicy, result_type>
+                result;
 
-            typedef std::pair<local_iterator_type, local_iterator_type>
+            typedef minmax_element_result<local_iterator_type>
                 local_iterator_pair_type;
 
             segment_iterator sit = traits::segment(first);
@@ -245,8 +248,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    result_type res = {traits::compose(send, out.first),
-                        traits::compose(send, out.second)};
+                    result_type res = {traits::compose(send, out.min),
+                        traits::compose(send, out.max)};
                     positions.push_back(res);
                 }
             }
@@ -261,8 +264,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    result_type res = {traits::compose(sit, out.first),
-                        traits::compose(sit, out.second)};
+                    result_type res = {traits::compose(sit, out.min),
+                        traits::compose(sit, out.max)};
                     positions.push_back(res);
                 }
 
@@ -278,8 +281,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                             dispatch(traits::get_id(sit), algo, policy,
                                 std::true_type(), beg, end, f, proj);
 
-                        result_type res = {traits::compose(sit, out.first),
-                            traits::compose(sit, out.second)};
+                        result_type res = {traits::compose(sit, out.min),
+                            traits::compose(sit, out.max)};
                         positions.push_back(res);
                     }
                 }
@@ -292,14 +295,14 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     local_iterator_pair_type out = dispatch(traits::get_id(sit),
                         algo, policy, std::true_type(), beg, end, f, proj);
 
-                    result_type res = {traits::compose(sit, out.first),
-                        traits::compose(sit, out.second)};
+                    result_type res = {traits::compose(sit, out.min),
+                        traits::compose(sit, out.max)};
                     positions.push_back(res);
                 }
             }
 
-            return Algo::sequential_minmax_element_ind(
-                policy, positions.begin(), positions.size(), f, proj);
+            return result::get(Algo::sequential_minmax_element_ind(
+                policy, positions.begin(), positions.size(), f, proj));
         }
 
         // parallel remote implementation
@@ -321,7 +324,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
             typedef util::detail::algorithm_result<ExPolicy, result_type>
                 result;
 
-            typedef std::pair<local_iterator_type, local_iterator_type>
+            typedef minmax_element_result<local_iterator_type>
                 local_iterator_pair_type;
 
             segment_iterator sit = traits::segment(first);
