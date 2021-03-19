@@ -442,7 +442,7 @@ namespace hpx { namespace segmented {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
             "Requires at least forward iterator.");
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             return first;
         }
@@ -475,7 +475,7 @@ namespace hpx { namespace segmented {
 
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             return hpx::parallel::util::detail::algorithm_result<ExPolicy,
                 SegIter>::get(std::move(first));
@@ -503,7 +503,7 @@ namespace hpx { namespace segmented {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
             "Requires at least forward iterator.");
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             return first;
         }
@@ -536,7 +536,7 @@ namespace hpx { namespace segmented {
 
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             return hpx::parallel::util::detail::algorithm_result<ExPolicy,
                 SegIter>::get(std::move(first));
@@ -565,7 +565,7 @@ namespace hpx { namespace segmented {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
             "Requires at least forward iterator.");
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             return {first, first};
         }
@@ -599,7 +599,7 @@ namespace hpx { namespace segmented {
         using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
         using result_type = minmax_element_result<SegIter>;
 
-        if (first == last || ++first == last)
+        if (first == last || (first + 1) == last)
         {
             result_type result = {first, first};
             return hpx::parallel::util::detail::algorithm_result<ExPolicy,
