@@ -26,9 +26,9 @@ HPX_REGISTER_PARTITIONED_VECTOR(int);
 template <typename T>
 void initialize(hpx::partitioned_vector<T>& xvalues)
 {
-    T init_array[SIZE] = {1, 2, 3, 4, 5, 1, 2, 3, 3, 5, 5, 3, 4, 2, 3, 2, 1, 2,
-        3, 4, 5, 6, 5, 6, 1, 2, 3, 4, 1, 1, 2, 3, 4, 5, 4, 3, 2, 1, 1, 2, 3, 4,
-        1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 7, 6, 5, 7, 5, 4, 2, 3, 4, 5, 2};
+    T init_array[SIZE] = {1, 2, 3, 4, 5, 6, 2, 3, 3, 5, 5, 3, 4, 2, 3, 2, 6, 2,
+        3, 4, 5, 6, 5, 6, 6, 2, 3, 4, 6, 6, 2, 3, 4, 5, 4, 3, 2, 6, 6, 2, 3, 4,
+        6, 2, 3, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 5, 8, 5, 4, 2, 3, 4, 5, 2};
     for (int i = 0; i < SIZE; i++)
     {
         xvalues.set_value(i, init_array[i]);
@@ -64,22 +64,22 @@ void minmax_element_tests(std::vector<hpx::id_type>& localities)
     initialize(xvalues);
 
     test_minmax_element(
-        hpx::execution::seq, xvalues, std::less<int>(), T(1), T(7));
+        hpx::execution::seq, xvalues, std::less<int>(), T(1), T(8));
     test_minmax_element(
-        hpx::execution::par, xvalues, std::less<int>(), T(1), T(7));
+        hpx::execution::par, xvalues, std::less<int>(), T(1), T(8));
     test_minmax_element_async(hpx::execution::seq(hpx::execution::task),
-        xvalues, std::less<int>(), T(1), T(7));
+        xvalues, std::less<int>(), T(1), T(8));
     test_minmax_element_async(hpx::execution::par(hpx::execution::task),
-        xvalues, std::less<int>(), T(1), T(7));
+        xvalues, std::less<int>(), T(1), T(8));
 
     test_minmax_element(
-        hpx::execution::seq, xvalues, std::greater<int>(), T(7), T(1));
+        hpx::execution::seq, xvalues, std::greater<int>(), T(8), T(1));
     test_minmax_element(
-        hpx::execution::par, xvalues, std::greater<int>(), T(7), T(1));
+        hpx::execution::par, xvalues, std::greater<int>(), T(8), T(1));
     test_minmax_element_async(hpx::execution::seq(hpx::execution::task),
-        xvalues, std::greater<int>(), T(7), T(1));
+        xvalues, std::greater<int>(), T(8), T(1));
     test_minmax_element_async(hpx::execution::par(hpx::execution::task),
-        xvalues, std::greater<int>(), T(7), T(1));
+        xvalues, std::greater<int>(), T(8), T(1));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
