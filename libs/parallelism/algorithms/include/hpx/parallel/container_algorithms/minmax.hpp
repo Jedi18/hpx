@@ -627,7 +627,7 @@ namespace hpx {
         typename Proj = hpx::parallel::util::projection_identity>
         typename minmax_element_result<
             typename hpx::traits::range_iterator<Rng>::type,
-            typename hpx::traits::range_iterator<Rng>::type>>
+            typename hpx::traits::range_iterator<Rng>::type> >
         ::type minmax_element(Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -820,12 +820,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         min_element(
             ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj())
     {
-        using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
         return hpx::parallel::v1::detail::min_element<
             typename hpx::traits::range_iterator<Rng>::type>()
-            .call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+            .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                hpx::util::end(rng), std::forward<F>(f),
                 std::forward<Proj>(proj));
     }
 
@@ -850,12 +848,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         max_element(
             ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj())
     {
-        using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
         return hpx::parallel::v1::detail::max_element<
             typename hpx::traits::range_iterator<Rng>::type>()
-            .call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+            .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                hpx::util::end(rng), std::forward<F>(f),
                 std::forward<Proj>(proj));
     }
 
@@ -886,12 +882,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         minmax_element(
             ExPolicy&& policy, Rng&& rng, F&& f = F(), Proj&& proj = Proj())
     {
-        using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
         return hpx::parallel::v1::detail::minmax_element<
             typename hpx::traits::range_iterator<Rng>::type>()
-            .call(std::forward<ExPolicy>(policy), is_seq(),
-                hpx::util::begin(rng), hpx::util::end(rng), std::forward<F>(f),
+            .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                hpx::util::end(rng), std::forward<F>(f),
                 std::forward<Proj>(proj));
     }
 
@@ -936,8 +930,8 @@ namespace hpx { namespace ranges {
                 "Required at least forward iterator.");
 
             return hpx::parallel::v1::detail::min_element<FwdIter>().call(
-                hpx::execution::seq, std::true_type{}, first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                hpx::execution::seq, first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -965,9 +959,9 @@ namespace hpx { namespace ranges {
 
             return hpx::parallel::v1::detail::min_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(hpx::execution::seq, std::true_type{},
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(hpx::execution::seq, hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -993,11 +987,9 @@ namespace hpx { namespace ranges {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::min_element<FwdIter>().call(
-                std::forward<ExPolicy>(policy), is_seq(), first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                std::forward<ExPolicy>(policy), first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1024,13 +1016,11 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::min_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(std::forward<ExPolicy>(policy), is_seq(),
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
     } min_element{};
 
@@ -1062,8 +1052,8 @@ namespace hpx { namespace ranges {
                 "Required at least forward iterator.");
 
             return hpx::parallel::v1::detail::max_element<FwdIter>().call(
-                hpx::execution::seq, std::true_type{}, first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                hpx::execution::seq, first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1091,9 +1081,9 @@ namespace hpx { namespace ranges {
 
             return hpx::parallel::v1::detail::max_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(hpx::execution::seq, std::true_type{},
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(hpx::execution::seq, hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1119,11 +1109,9 @@ namespace hpx { namespace ranges {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::max_element<FwdIter>().call(
-                std::forward<ExPolicy>(policy), is_seq(), first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                std::forward<ExPolicy>(policy), first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1150,13 +1138,11 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::max_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(std::forward<ExPolicy>(policy), is_seq(),
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
     } max_element{};
 
@@ -1189,8 +1175,8 @@ namespace hpx { namespace ranges {
                 "Required at least forward iterator.");
 
             return hpx::parallel::v1::detail::minmax_element<FwdIter>().call(
-                hpx::execution::seq, std::true_type{}, first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                hpx::execution::seq, first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1219,9 +1205,9 @@ namespace hpx { namespace ranges {
 
             return hpx::parallel::v1::detail::minmax_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(hpx::execution::seq, std::true_type{},
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(hpx::execution::seq, hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1247,11 +1233,9 @@ namespace hpx { namespace ranges {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::minmax_element<FwdIter>().call(
-                std::forward<ExPolicy>(policy), is_seq(), first, last,
-                std::forward<F>(f), std::forward<Proj>(proj));
+                std::forward<ExPolicy>(policy), first, last, std::forward<F>(f),
+                std::forward<Proj>(proj));
         }
 
         // clang-format off
@@ -1279,13 +1263,11 @@ namespace hpx { namespace ranges {
                     typename hpx::traits::range_iterator<Rng>::type>::value),
                 "Required at least forward iterator.");
 
-            using is_seq = hpx::is_sequenced_execution_policy<ExPolicy>;
-
             return hpx::parallel::v1::detail::minmax_element<
                 typename hpx::traits::range_iterator<Rng>::type>()
-                .call(std::forward<ExPolicy>(policy), is_seq(),
-                    hpx::util::begin(rng), hpx::util::end(rng),
-                    std::forward<F>(f), std::forward<Proj>(proj));
+                .call(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
+                    hpx::util::end(rng), std::forward<F>(f),
+                    std::forward<Proj>(proj));
         }
     } minmax_element{};
 }}    // namespace hpx::ranges
