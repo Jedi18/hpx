@@ -627,7 +627,7 @@ namespace hpx {
         typename Proj = hpx::parallel::util::projection_identity>
         typename minmax_element_result<
             typename hpx::traits::range_iterator<Rng>::type,
-            typename hpx::traits::range_iterator<Rng>::type> >
+            typename hpx::traits::range_iterator<Rng>::type>>
         ::type minmax_element(Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
