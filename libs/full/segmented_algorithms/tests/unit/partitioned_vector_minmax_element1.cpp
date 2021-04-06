@@ -5,6 +5,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/config.hpp>
+#include <hpx/runtime.hpp>
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
 #include <hpx/hpx_main.hpp>
 #include <hpx/include/parallel_minmax.hpp>
