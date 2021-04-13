@@ -1,3 +1,4 @@
+//  Copyright (c) 2017 Ajai V George
 //  Copyright (c) 2020 Akhil J Nair
 //
 //  SPDX-License-Identifier: BSL-1.0
@@ -60,19 +61,19 @@ void max_element_tests(std::vector<hpx::id_type>& localities)
         SIZE, T(0), hpx::container_layout(localities));
     initialize(xvalues);
 
-    test_max_element(hpx::execution::seq, xvalues, std::less<int>(), T(8));
-    test_max_element(hpx::execution::par, xvalues, std::less<int>(), T(8));
+    test_max_element(hpx::execution::seq, xvalues, std::less<T>(), T(8));
+    test_max_element(hpx::execution::par, xvalues, std::less<T>(), T(8));
     test_max_element_async(hpx::execution::seq(hpx::execution::task), xvalues,
-        std::less<int>(), T(8));
+        std::less<T>(), T(8));
     test_max_element_async(hpx::execution::par(hpx::execution::task), xvalues,
-        std::less<int>(), T(8));
+        std::less<T>(), T(8));
 
-    test_max_element(hpx::execution::seq, xvalues, std::greater<int>(), T(1));
-    test_max_element(hpx::execution::par, xvalues, std::greater<int>(), T(1));
+    test_max_element(hpx::execution::seq, xvalues, std::greater<T>(), T(1));
+    test_max_element(hpx::execution::par, xvalues, std::greater<T>(), T(1));
     test_max_element_async(hpx::execution::seq(hpx::execution::task), xvalues,
-        std::greater<int>(), T(1));
+        std::greater<T>(), T(1));
     test_max_element_async(hpx::execution::par(hpx::execution::task), xvalues,
-        std::greater<int>(), T(1));
+        std::greater<T>(), T(1));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
