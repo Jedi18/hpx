@@ -407,7 +407,7 @@ Parallel algorithms
      * Applies a function to a number of elements.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`for_each_n`
-   * * :cpp:func:`hpx::parallel::v1::lexicographical_compare`
+   * * :cpp:func:`hpx::lexicographical_compare`
      * Checks if a range of values is lexicographically less than another range of values.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`lexicographical_compare`
@@ -498,11 +498,11 @@ Parallel algorithms
      * Copies a range, replacing elements satisfying specific criteria with another value.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`replace_copy`
-   * * :cpp:func:`hpx::parallel::v1::reverse`
+   * * :cpp:func:`hpx::reverse`
      * Reverses the order elements in a range.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`reverse`
-   * * :cpp:func:`hpx::parallel::v1::reverse_copy`
+   * * :cpp:func:`hpx::reverse_copy`
      * Creates a copy of a range that is reversed.
      * ``<hpx/algorithm.hpp>``
      * :cppreference-algorithm:`reverse_copy`

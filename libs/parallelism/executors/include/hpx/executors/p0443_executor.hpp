@@ -36,23 +36,23 @@ namespace hpx { namespace execution { namespace experimental {
             return !(*this == rhs);
         }
 
-        friend executor tag_invoke(
-            hpx::execution::experimental::make_with_priority_t,
-            executor const& exec, hpx::threads::thread_priority priority)
+        friend executor tag_dispatch(
+            hpx::execution::experimental::with_priority_t, executor const& exec,
+            hpx::threads::thread_priority priority)
         {
             auto exec_with_priority = exec;
             exec_with_priority.priority_ = priority;
             return exec_with_priority;
         }
 
-        friend hpx::threads::thread_priority tag_invoke(
+        friend hpx::threads::thread_priority tag_dispatch(
             hpx::execution::experimental::get_priority_t, executor const& exec)
         {
             return exec.priority_;
         }
 
-        friend executor tag_invoke(
-            hpx::execution::experimental::make_with_stacksize_t,
+        friend executor tag_dispatch(
+            hpx::execution::experimental::with_stacksize_t,
             executor const& exec, hpx::threads::thread_stacksize stacksize)
         {
             auto exec_with_stacksize = exec;
@@ -60,14 +60,13 @@ namespace hpx { namespace execution { namespace experimental {
             return exec_with_stacksize;
         }
 
-        friend hpx::threads::thread_stacksize tag_invoke(
+        friend hpx::threads::thread_stacksize tag_dispatch(
             hpx::execution::experimental::get_stacksize_t, executor const& exec)
         {
             return exec.stacksize_;
         }
 
-        friend executor tag_invoke(
-            hpx::execution::experimental::make_with_hint_t,
+        friend executor tag_dispatch(hpx::execution::experimental::with_hint_t,
             executor const& exec, hpx::threads::thread_schedule_hint hint)
         {
             auto exec_with_hint = exec;
@@ -75,7 +74,7 @@ namespace hpx { namespace execution { namespace experimental {
             return exec_with_hint;
         }
 
-        friend hpx::threads::thread_schedule_hint tag_invoke(
+        friend hpx::threads::thread_schedule_hint tag_dispatch(
             hpx::execution::experimental::get_hint_t, executor const& exec)
         {
             return exec.schedulehint_;
@@ -143,6 +142,12 @@ namespace hpx { namespace execution { namespace experimental {
             operation_state<Executor, R> connect(R&& r) &&
             {
                 return {std::move(exec), std::forward<R>(r)};
+            }
+
+            template <typename R>
+            operation_state<Executor, R> connect(R&& r) &
+            {
+                return {exec, std::forward<R>(r)};
             }
         };
 

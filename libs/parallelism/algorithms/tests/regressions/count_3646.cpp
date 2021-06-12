@@ -6,15 +6,14 @@
 
 // #3646: Parallel algorithms should accept iterator/sentinel pairs
 
-#include <hpx/hpx_main.hpp>
-#include <hpx/include/parallel_count.hpp>
+#include <hpx/iterator_support/tests/iter_sent.hpp>
+#include <hpx/local/init.hpp>
 #include <hpx/modules/testing.hpp>
+#include <hpx/parallel/container_algorithms/count.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-
-#include "iter_sent.hpp"
 
 struct bit_counting_iterator : public iterator<std::int64_t>
 {
@@ -27,42 +26,6 @@ struct bit_counting_iterator : public iterator<std::int64_t>
     explicit bit_counting_iterator(int64_t initialState)
       : iterator<int64_t>(initialState)
     {
-    }
-
-    std::int64_t operator*() const override
-    {
-        return countBits(this->state);
-    }
-
-    std::int64_t operator[](difference_type n) const override
-    {
-        return countBits(this->state + n);
-    }
-
-    bit_counting_iterator& operator++()
-    {
-        ++(this->state);
-        return *this;
-    }
-
-    bit_counting_iterator operator++(int)
-    {
-        auto copy = *this;
-        ++(*this);
-        return copy;
-    }
-
-    bit_counting_iterator& operator--()
-    {
-        --(this->state);
-        return *this;
-    }
-
-    bit_counting_iterator operator--(int)
-    {
-        auto copy = *this;
-        --(*this);
-        return copy;
     }
 
 private:
@@ -116,9 +79,18 @@ void test_count_if()
     HPX_TEST_EQ(result, stdResult);
 }
 
-int main()
+int hpx_main()
 {
     test_count();
     test_count_if();
+
+    return hpx::local::finalize();
+}
+
+int main(int argc, char* argv[])
+{
+    HPX_TEST_EQ_MSG(hpx::local::init(hpx_main, argc, argv), 0,
+        "HPX main exited with non-zero status");
+
     return hpx::util::report_errors();
 }

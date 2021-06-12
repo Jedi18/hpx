@@ -1,4 +1,5 @@
-//  Copyright (c) 2007-2017 Hartmut Kaiser
+//  Copyright (c) 2007-2021 Hartmut Kaiser
+//  Copyright (c)      2011 Bryce Lelbach
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -6,15 +7,16 @@
 
 #pragma once
 
-#include <hpx/runtime_configuration/ini.hpp>
-#include <hpx/runtime_local/runtime_local_fwd.hpp>
+#include <hpx/config.hpp>
+#include <hpx/init_runtime_local/detail/init_logging.hpp>
 
-#include <string>
-#include <vector>
+#if defined(HPX_HAVE_LOGGING)
+#include <hpx/runtime_configuration/runtime_configuration.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace util { namespace detail {
-    /// The init_logging type will be used for initialization purposes only as
-    /// well.
-    HPX_EXPORT void init_logging(runtime_configuration& ini, bool isconsole);
+
+    HPX_EXPORT void init_logging_full(runtime_configuration&);
 }}}    // namespace hpx::util::detail
+
+#endif

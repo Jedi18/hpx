@@ -11,14 +11,9 @@
 #include <hpx/include/parallel_executors.hpp>
 #include <hpx/include/parallel_for_each.hpp>
 #include <hpx/include/parallel_for_loop.hpp>
+#include <hpx/modules/async_cuda.hpp>
 #include <hpx/modules/testing.hpp>
-//
-#include <hpx/async_cuda/cuda_executor.hpp>
-#include <hpx/async_cuda/target.hpp>
 
-// CUDA runtime
-#include <hpx/async_cuda/custom_gpu_api.hpp>
-//
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -36,16 +31,24 @@
 template <typename T>
 extern void cuda_trivial_kernel(T, cudaStream_t stream);
 
-extern __global__ void saxpy(int n, float a, float* x, float* y);
+// Need to move the call to the saxpy device kernel in .cu, as the symbol change
+// from saxpy to __device_stub__saxpy when moving from Clang 10 to Clang 11
+extern void launch_saxpy_kernel(
+    hpx::cuda::experimental::cuda_executor& cudaexec, unsigned int& blocks,
+    unsigned int& threads, void** args);
 // -------------------------------------------------------------------------
 int test_saxpy(hpx::cuda::experimental::cuda_executor& cudaexec)
 {
     int N = 1 << 20;
 
-    // host arrays
-    std::vector<float> h_A(N);
-    std::vector<float> h_B(N);
+    // host arrays (CUDA pinned host memory for asynchronous data transfers)
+    float *h_A, *h_B;
+    hpx::cuda::experimental::check_cuda_error(
+        cudaMallocHost((void**) &h_A, N * sizeof(float)));
+    hpx::cuda::experimental::check_cuda_error(
+        cudaMallocHost((void**) &h_B, N * sizeof(float)));
 
+    // device arrays
     float *d_A, *d_B;
     hpx::cuda::experimental::check_cuda_error(
         cudaMalloc((void**) &d_A, N * sizeof(float)));
@@ -62,9 +65,9 @@ int test_saxpy(hpx::cuda::experimental::cuda_executor& cudaexec)
 
     // copy both arrays from cpu to gpu, putting both copies onto the stream
     // no need to get a future back yet
-    hpx::apply(cudaexec, cudaMemcpyAsync, d_A, h_A.data(), N * sizeof(float),
+    hpx::apply(cudaexec, cudaMemcpyAsync, d_A, h_A, N * sizeof(float),
         cudaMemcpyHostToDevice);
-    hpx::apply(cudaexec, cudaMemcpyAsync, d_B, h_B.data(), N * sizeof(float),
+    hpx::apply(cudaexec, cudaMemcpyAsync, d_B, h_B, N * sizeof(float),
         cudaMemcpyHostToDevice);
 
     unsigned int threads = 256;
@@ -73,17 +76,11 @@ int test_saxpy(hpx::cuda::experimental::cuda_executor& cudaexec)
 
     // now launch a kernel on the stream
     void* args[] = {&N, &ratio, &d_A, &d_B};
-#ifdef HPX_HAVE_HIP
-    hpx::apply(cudaexec, cudaLaunchKernel,
-#else
-    hpx::apply(cudaexec, cudaLaunchKernel<void>,
-#endif
-        reinterpret_cast<const void*>(&saxpy), dim3(blocks), dim3(threads),
-        args, std::size_t(0));
+    launch_saxpy_kernel(cudaexec, blocks, threads, args);
 
     // finally, perform a copy from the gpu back to the cpu all on the same stream
     // grab a future to when this completes
-    auto cuda_future = hpx::async(cudaexec, cudaMemcpyAsync, h_B.data(), d_B,
+    auto cuda_future = hpx::async(cudaexec, cudaMemcpyAsync, h_B, d_B,
         N * sizeof(float), cudaMemcpyDeviceToHost);
 
     // we can add a continuation to the memcpy future, so that when the

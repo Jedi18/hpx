@@ -15,7 +15,7 @@
 #include <hpx/async_local/dataflow.hpp>
 #include <hpx/coroutines/detail/get_stack_pointer.hpp>
 #include <hpx/datastructures/tuple.hpp>
-#include <hpx/execution/traits/is_executor.hpp>
+#include <hpx/execution_base/traits/is_executor.hpp>
 #include <hpx/functional/deferred_call.hpp>
 #include <hpx/functional/invoke_fused.hpp>
 #include <hpx/functional/traits/is_action.hpp>
@@ -76,11 +76,7 @@ namespace hpx { namespace lcos { namespace detail {
     struct dataflow_dispatch_impl<true, FD,
         typename std::enable_if<!traits::is_launch_policy<FD>::value &&
             !(traits::is_one_way_executor<FD>::value ||
-                traits::is_two_way_executor<FD>::value
-#if defined(HPX_HAVE_THREAD_EXECUTORS_COMPATIBILITY)
-                || traits::is_threads_executor<FD>::value
-#endif
-                )>::type>
+                traits::is_two_way_executor<FD>::value)>::type>
     {
         template <typename Allocator, typename Component, typename Signature,
             typename Derived, typename... Ts>

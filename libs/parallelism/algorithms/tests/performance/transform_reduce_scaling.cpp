@@ -5,17 +5,16 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/hpx.hpp>
-#include <hpx/hpx_init.hpp>
+#include <hpx/local/chrono.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/numeric.hpp>
 
-#include <hpx/chrono.hpp>
-#include <hpx/iostream.hpp>
-#include <hpx/numeric.hpp>
 #include "worker_timed.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <random>
 #include <stdexcept>
@@ -78,7 +77,7 @@ int hpx_main(hpx::program_options::variables_map& vm)
     test_count = vm["test_count"].as<int>();
     if (test_count < 0 || test_count == 0)
     {
-        hpx::cout << "test_count cannot be less than zero...\n" << hpx::flush;
+        std::cout << "test_count cannot be less than zero...\n" << std::flush;
     }
     else
     {
@@ -88,21 +87,21 @@ int hpx_main(hpx::program_options::variables_map& vm)
 
         if (csvoutput)
         {
-            hpx::cout << "," << tr_time / 1e9 << "," << tr_old_time / 1e9
+            std::cout << "," << tr_time / 1e9 << "," << tr_old_time / 1e9
                       << "\n"
-                      << hpx::flush;
+                      << std::flush;
         }
         else
         {
-            hpx::cout << "transform_reduce: " << std::right << std::setw(30)
+            std::cout << "transform_reduce: " << std::right << std::setw(30)
                       << tr_time / 1e9 << "\n"
-                      << hpx::flush;
-            hpx::cout << "old_transform_reduce" << std::right << std::setw(30)
+                      << std::flush;
+            std::cout << "old_transform_reduce" << std::right << std::setw(30)
                       << tr_old_time / 1e9 << "\n"
-                      << hpx::flush;
+                      << std::flush;
         }
     }
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 int main(int argc, char* argv[])
@@ -123,9 +122,9 @@ int main(int argc, char* argv[])
                 hpx::program_options::value<int>()->default_value(100),
                 "number of tests to take average from");
 
-    hpx::init_params init_args;
+    hpx::local::init_params init_args;
     init_args.desc_cmdline = cmdline;
     init_args.cfg = cfg;
 
-    return hpx::init(argc, argv, init_args);
+    return hpx::local::init(hpx_main, argc, argv, init_args);
 }

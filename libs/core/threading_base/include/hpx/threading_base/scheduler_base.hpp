@@ -37,6 +37,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace threads { namespace policies {
+    namespace detail {
+        enum class polling_status
+        {
+            /// Signals that a polling function currently has no more work to do
+            idle = 0,
+            /// Signals that a polling function still has outstanding work to
+            /// poll for
+            busy = 1
+        };
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     /// The scheduler_base defines the interface to be implemented by all
     /// scheduler policies
@@ -278,40 +289,83 @@ namespace hpx { namespace threads { namespace policies {
             return thread_queue_init_.small_stacksize_;
         }
 
-        using polling_function_ptr = void (*)();
+        using polling_function_ptr = detail::polling_status (*)();
+        using polling_work_count_function_ptr = std::size_t (*)();
 
-        static void null_polling_function() {}
+        static detail::polling_status null_polling_function()
+        {
+            return detail::polling_status::idle;
+        }
 
-        void set_mpi_polling_function(polling_function_ptr mpi_func)
+        static std::size_t null_polling_work_count_function()
+        {
+            return 0;
+        }
+
+        void set_mpi_polling_functions(polling_function_ptr mpi_func,
+            polling_work_count_function_ptr mpi_work_count_func)
         {
             polling_function_mpi_.store(mpi_func, std::memory_order_relaxed);
+            polling_work_count_function_mpi_.store(
+                mpi_work_count_func, std::memory_order_relaxed);
         }
 
         void clear_mpi_polling_function()
         {
             polling_function_mpi_.store(
                 &null_polling_function, std::memory_order_relaxed);
+            polling_work_count_function_mpi_.store(
+                &null_polling_work_count_function, std::memory_order_relaxed);
         }
 
-        void set_cuda_polling_function(polling_function_ptr cuda_func)
+        void set_cuda_polling_functions(polling_function_ptr cuda_func,
+            polling_work_count_function_ptr cuda_work_count_func)
         {
             polling_function_cuda_.store(cuda_func, std::memory_order_relaxed);
+            polling_work_count_function_cuda_.store(
+                cuda_work_count_func, std::memory_order_relaxed);
         }
 
         void clear_cuda_polling_function()
         {
             polling_function_cuda_.store(
                 &null_polling_function, std::memory_order_relaxed);
+            polling_work_count_function_cuda_.store(
+                &null_polling_work_count_function, std::memory_order_relaxed);
         }
 
-        inline void custom_polling_function() const
+        detail::polling_status custom_polling_function() const
         {
+            detail::polling_status status = detail::polling_status::idle;
 #if defined(HPX_HAVE_MODULE_ASYNC_MPI)
-            (*polling_function_mpi_.load(std::memory_order_relaxed))();
+            if ((*polling_function_mpi_.load(std::memory_order_relaxed))() ==
+                detail::polling_status::busy)
+            {
+                status = detail::polling_status::busy;
+            }
 #endif
 #if defined(HPX_HAVE_MODULE_ASYNC_CUDA)
-            (*polling_function_cuda_.load(std::memory_order_relaxed))();
+            if ((*polling_function_cuda_.load(std::memory_order_relaxed))() ==
+                detail::polling_status::busy)
+            {
+                status = detail::polling_status::busy;
+            }
 #endif
+            return status;
+        }
+
+        std::size_t get_polling_work_count() const
+        {
+            std::size_t work_count = 0;
+#if defined(HPX_HAVE_MODULE_ASYNC_MPI)
+            work_count += polling_work_count_function_mpi_.load(
+                std::memory_order_relaxed)();
+#endif
+#if defined(HPX_HAVE_MODULE_ASYNC_CUDA)
+            work_count += polling_work_count_function_cuda_.load(
+                std::memory_order_relaxed)();
+#endif
+            return work_count;
         }
 
     protected:
@@ -348,6 +402,10 @@ namespace hpx { namespace threads { namespace policies {
 
         std::atomic<polling_function_ptr> polling_function_mpi_;
         std::atomic<polling_function_ptr> polling_function_cuda_;
+        std::atomic<polling_work_count_function_ptr>
+            polling_work_count_function_mpi_;
+        std::atomic<polling_work_count_function_ptr>
+            polling_work_count_function_cuda_;
 
 #if defined(HPX_HAVE_SCHEDULER_LOCAL_STORAGE)
     public:

@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include <hpx/include/lcos_local.hpp>
-#include <hpx/include/parallel_execution_policy.hpp>
-#include <hpx/include/util.hpp>
+#include <hpx/local/execution.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/modules/iterator_support.hpp>
 
 #include <algorithm>
 #include <atomic>
@@ -57,14 +57,15 @@ namespace test {
             base_type;
 
     public:
-        decorated_iterator() {}
+        HPX_HOST_DEVICE decorated_iterator() {}
 
-        decorated_iterator(BaseIterator base)
+        HPX_HOST_DEVICE decorated_iterator(BaseIterator base)
           : base_type(base)
         {
         }
 
-        decorated_iterator(BaseIterator base, std::function<void()> f)
+        HPX_HOST_DEVICE decorated_iterator(
+            BaseIterator base, std::function<void()> f)
           : base_type(base)
           , m_callback(f)
         {
@@ -73,7 +74,7 @@ namespace test {
     private:
         friend class hpx::util::iterator_core_access;
 
-        typename base_type::reference dereference() const
+        HPX_HOST_DEVICE typename base_type::reference dereference() const
         {
             if (m_callback)
                 m_callback();

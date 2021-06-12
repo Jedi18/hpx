@@ -157,9 +157,7 @@ namespace hpx { namespace execution_base {
             if (aborted_)
             {
                 HPX_THROW_EXCEPTION(yield_aborted, "suspend",
-                    hpx::util::format(
-                        "std::thread({}) aborted (yield returned wait_abort)",
-                        id_));
+                    "std::thread({}) aborted (yield returned wait_abort)", id_);
             }
         }
 
@@ -203,13 +201,15 @@ namespace hpx { namespace execution_base {
         {
             std::this_thread::sleep_until(sleep_time.value());
         }
+    }    // namespace
 
+    namespace detail {
         agent_base& get_default_agent()
         {
             static thread_local default_agent agent;
             return agent;
         }
-    }    // namespace
+    }    // namespace detail
 
     namespace this_thread {
 
@@ -218,7 +218,7 @@ namespace hpx { namespace execution_base {
             struct agent_storage
             {
                 agent_storage()
-                  : impl_(&get_default_agent())
+                  : impl_(&hpx::execution_base::detail::get_default_agent())
                 {
                 }
 

@@ -48,7 +48,14 @@ namespace hpx { namespace parallel { inline namespace v1 { namespace detail {
     HPX_HOST_DEVICE constexpr void advance_impl(
         InputIterator& i, Distance n, std::input_iterator_tag)
     {
+#if defined(HPX_INTEL_VERSION)
+#pragma warning(push)
+#pragma warning(disable : 186)
+#endif
         HPX_ASSERT(n >= 0);
+#if defined(HPX_INTEL_VERSION)
+#pragma warning(pop)
+#endif
         while (n--)
             ++i;
     }
@@ -166,14 +173,13 @@ namespace hpx { namespace parallel { inline namespace v1 { namespace detail {
             HPX_ASSERT(!std::is_signed<Stride>::value || !is_negative(offset));
 
             // NVCC seems to have a bug with std::min...
-            Stride count =
+            offset =
                 Stride(max_count < std::size_t(offset) ? max_count : offset);
 
             // advance through the end or max number of elements
-            for (/**/; count != 0; (void) ++iter, --count)
+            for (Stride count = offset; count != 0; (void) ++iter, --count)
                 /**/;
 
-            offset -= count;
             return iter;
         }
     };

@@ -15,7 +15,7 @@
 #include <hpx/execution/detail/async_launch_policy_dispatch.hpp>
 #include <hpx/execution/executors/execution.hpp>
 #include <hpx/execution/executors/static_chunk_size.hpp>
-#include <hpx/execution/traits/is_executor.hpp>
+#include <hpx/execution_base/traits/is_executor.hpp>
 #include <hpx/functional/invoke.hpp>
 #include <hpx/functional/invoke_fused.hpp>
 #include <hpx/synchronization/spinlock.hpp>
@@ -233,10 +233,11 @@ namespace hpx { namespace execution { namespace experimental {
                     }
 
                     thread_states_[t].data_ = thread_state::starting;
+                    hpx::util::thread_description desc("fork_join_executor");
                     threads::thread_schedule_hint hint{
                         static_cast<std::int16_t>(t)};
                     hpx::detail::async_launch_policy_dispatch<
-                        launch::async_policy>::call(launch::async, pool_,
+                        launch::async_policy>::call(launch::async, desc, pool_,
                         priority_, stacksize_, hint,
                         thread_function{num_threads_, t, schedule_,
                             thread_states_[t].data_, exception_mutex_,

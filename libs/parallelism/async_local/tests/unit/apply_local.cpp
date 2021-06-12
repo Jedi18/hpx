@@ -5,9 +5,10 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/config.hpp>
-#include <hpx/hpx_init.hpp>
-#include <hpx/include/apply.hpp>
-#include <hpx/include/lcos.hpp>
+#include <hpx/local/condition_variable.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/mutex.hpp>
 #include <hpx/modules/testing.hpp>
 
 #include <atomic>
@@ -88,7 +89,6 @@ int hpx_main()
         increment_type inc;
 
         using hpx::util::placeholders::_1;
-        using hpx::util::placeholders::_2;
 
         hpx::apply(&increment_type::call, inc, 1);
         hpx::apply(hpx::util::bind(&increment_type::call, inc, 1));
@@ -99,7 +99,6 @@ int hpx_main()
         increment_function_object obj;
 
         using hpx::util::placeholders::_1;
-        using hpx::util::placeholders::_2;
 
         hpx::apply(obj, 1);
         hpx::apply(hpx::util::bind(obj, 1));
@@ -108,7 +107,6 @@ int hpx_main()
 
     {
         using hpx::util::placeholders::_1;
-        using hpx::util::placeholders::_2;
 
         hpx::apply(increment_lambda, 1);
         hpx::apply(hpx::util::bind(increment_lambda, 1));
@@ -123,7 +121,7 @@ int hpx_main()
 
     HPX_TEST_EQ(accumulator.load(), 18);
 
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 int main(int argc, char* argv[])
@@ -131,8 +129,8 @@ int main(int argc, char* argv[])
     accumulator.store(0);
 
     // Initialize and run HPX
-    HPX_TEST_EQ_MSG(
-        hpx::init(argc, argv), 0, "HPX main exited with non-zero status");
+    HPX_TEST_EQ_MSG(hpx::local::init(hpx_main, argc, argv), 0,
+        "HPX main exited with non-zero status");
 
     return hpx::util::report_errors();
 }

@@ -20,11 +20,6 @@ set(tests
     is_sized_sentinel_for
 )
 
-# Set the dependencies of each test
-if(HPX_WITH_DISTRIBUTED_RUNTIME)
-  set(is_iterator_LIBS DEPENDENCIES partitioned_vector_component)
-endif()
-
 set(is_range_FLAGS NOLIBS)
 set(is_range_LIBS DEPENDENCIES hpx_core)
 
@@ -45,6 +40,9 @@ foreach(test ${tests})
     FOLDER "Tests/Unit/Modules/Core/IteratorSupport"
   )
 
-  add_hpx_unit_test("modules.iterator_support" ${test} ${${test}_PARAMETERS})
+  target_link_libraries(
+    ${test}_test PRIVATE hpx_iterator_support_test_utilities
+  )
 
+  add_hpx_unit_test("modules.iterator_support" ${test} ${${test}_PARAMETERS})
 endforeach()

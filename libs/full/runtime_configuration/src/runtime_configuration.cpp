@@ -18,6 +18,7 @@
 #include <hpx/runtime_configuration/plugin_registry_base.hpp>
 #include <hpx/runtime_configuration/runtime_configuration.hpp>
 #include <hpx/runtime_configuration/runtime_mode.hpp>
+#include <hpx/util/from_string.hpp>
 #include <hpx/util/get_entry_as.hpp>
 #include <hpx/version.hpp>
 
@@ -122,6 +123,7 @@ namespace hpx { namespace util {
 #endif
             "finalize_wait_time = ${HPX_FINALIZE_WAIT_TIME:-1.0}",
             "shutdown_timeout = ${HPX_SHUTDOWN_TIMEOUT:-1.0}",
+            "shutdown_check_count = ${HPX_SHUTDOWN_CHECK_COUNT:10}",
 #ifdef HPX_HAVE_VERIFY_LOCKS
 #if defined(HPX_DEBUG)
             "lock_detection = ${HPX_LOCK_DETECTION:1}",
@@ -172,7 +174,6 @@ namespace hpx { namespace util {
             "numa_sensitive = 0",
             "max_background_threads = "
             "${HPX_MAX_BACKGROUND_THREADS:$[hpx.os_threads]}",
-
             "max_idle_loop_count = ${HPX_MAX_IDLE_LOOP_COUNT:" HPX_PP_STRINGIZE(
                 HPX_PP_EXPAND(HPX_IDLE_LOOP_COUNT_MAX)) "}",
             "max_busy_loop_count = ${HPX_MAX_BUSY_LOOP_COUNT:" HPX_PP_STRINGIZE(
@@ -376,16 +377,17 @@ namespace hpx { namespace util {
 
     void runtime_configuration::pre_initialize_logging_ini()
     {
+#if defined(HPX_HAVE_LOGGING)
         std::vector<std::string> lines = {
         // clang-format off
-#if defined(HPX_HAVE_LOGGING)
 #define HPX_TIMEFORMAT "$hh:$mm.$ss.$mili"
+#define HPX_LOGFORMAT "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+
             // general logging
             "[hpx.logging]",
             "level = ${HPX_LOGLEVEL:0}",
             "destination = ${HPX_LOGDESTINATION:console}",
-            "format = ${HPX_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                 HPX_TIMEFORMAT ") [%idx%]|\\n}",
 
@@ -404,8 +406,7 @@ namespace hpx { namespace util {
             "[hpx.logging.timing]",
             "level = ${HPX_TIMING_LOGLEVEL:-1}",
             "destination = ${HPX_TIMING_LOGDESTINATION:console}",
-            "format = ${HPX_TIMING_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_TIMING_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                 HPX_TIMEFORMAT ") [%idx%] [TIM] |\\n}",
 
@@ -425,8 +426,7 @@ namespace hpx { namespace util {
             "level = ${HPX_AGAS_LOGLEVEL:-1}",
             "destination = ${HPX_AGAS_LOGDESTINATION:"
                 "file(hpx.agas.$[system.pid].log)}",
-            "format = ${HPX_AGAS_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_AGAS_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                     HPX_TIMEFORMAT ") [%idx%][AGAS] |\\n}",
 
@@ -446,8 +446,7 @@ namespace hpx { namespace util {
             "level = ${HPX_PARCEL_LOGLEVEL:-1}",
             "destination = ${HPX_PARCEL_LOGDESTINATION:"
                 "file(hpx.parcel.$[system.pid].log)}",
-            "format = ${HPX_PARCEL_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_PARCEL_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                 HPX_TIMEFORMAT ") [%idx%][  PT] |\\n}",
 
@@ -466,8 +465,7 @@ namespace hpx { namespace util {
             "[hpx.logging.application]",
             "level = ${HPX_APP_LOGLEVEL:-1}",
             "destination = ${HPX_APP_LOGDESTINATION:console}",
-            "format = ${HPX_APP_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_APP_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                 HPX_TIMEFORMAT ") [%idx%] [APP] |\\n}",
 
@@ -486,8 +484,7 @@ namespace hpx { namespace util {
             "[hpx.logging.debuglog]",
             "level = ${HPX_DEB_LOGLEVEL:-1}",
             "destination = ${HPX_DEB_LOGDESTINATION:console}",
-            "format = ${HPX_DEB_LOGFORMAT:"
-                "(T%locality%/%hpxthread%.%hpxphase%/%hpxcomponent%) "
+            "format = ${HPX_DEB_LOGFORMAT:" HPX_LOGFORMAT
                 "P%parentloc%/%hpxparent%.%hpxparentphase% %time%("
                 HPX_TIMEFORMAT ") [%idx%] [DEB] |\\n}",
 
@@ -502,12 +499,13 @@ namespace hpx { namespace util {
             "format = ${HPX_CONSOLE_DEB_LOGFORMAT:|}"
 
 #undef HPX_TIMEFORMAT
-#endif
+#undef HPX_LOGFORMAT
             // clang-format on
         };
 
         // don't overload user overrides
         this->parse("<static logging defaults>", lines, false, false);
+#endif
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -787,7 +785,7 @@ namespace hpx { namespace util {
                     // REVIEW: exception type is overused
                     HPX_THROW_EXCEPTION(bad_parameter,
                         "runtime_configuration::get_agas_service_mode",
-                        std::string("invalid AGAS router mode \"") + m + "\"");
+                        "invalid AGAS router mode \"{}\"", m);
                 }
             }
         }

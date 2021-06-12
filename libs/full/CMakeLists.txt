@@ -24,6 +24,7 @@ set(_hpx_full_modules
     checkpoint_base
     collectives
     command_line_handling
+    command_line_handling_local
     components
     components_base
     compute
@@ -31,7 +32,9 @@ set(_hpx_full_modules
     distribution_policies
     executors_distributed
     include
+    include_local
     init_runtime
+    init_runtime_local
     lcos_distributed
     mpi_base
     naming
@@ -45,7 +48,6 @@ set(_hpx_full_modules
     runtime_distributed
     runtime_local
     segmented_algorithms
-    thread_executors
     threadmanager
 )
 # cmake-format: on

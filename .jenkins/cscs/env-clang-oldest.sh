@@ -4,8 +4,6 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-source $SPACK_ROOT/share/spack/setup-env.sh
-
 export CRAYPE_LINK_TYPE=dynamic
 export APPS_ROOT="/apps/daint/SSL/HPX/packages"
 export CLANG_VER="7.1.0"
@@ -22,8 +20,8 @@ export CC="${CLANG_ROOT}/bin/clang"
 export CPP="${CLANG_ROOT}/bin/clang -E"
 
 module load daint-mc
-spack load cmake
-spack load ninja
+spack load cmake@3.17.3
+spack load ninja@1.10.0
 
 configure_extra_options="-DCMAKE_BUILD_TYPE=Debug"
 configure_extra_options+=" -DHPX_WITH_MAX_CPU_COUNT="

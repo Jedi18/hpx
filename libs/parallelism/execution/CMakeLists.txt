@@ -7,19 +7,24 @@
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(execution_headers
+    hpx/execution/algorithms/detach.hpp
     hpx/execution/algorithms/detail/is_negative.hpp
     hpx/execution/algorithms/detail/partial_algorithm.hpp
     hpx/execution/algorithms/detail/predicates.hpp
     hpx/execution/algorithms/detail/single_result.hpp
+    hpx/execution/algorithms/ensure_started.hpp
     hpx/execution/algorithms/just.hpp
     hpx/execution/algorithms/just_on.hpp
+    hpx/execution/algorithms/keep_future.hpp
+    hpx/execution/algorithms/let_error.hpp
+    hpx/execution/algorithms/let_value.hpp
     hpx/execution/algorithms/on.hpp
     hpx/execution/algorithms/sync_wait.hpp
     hpx/execution/algorithms/transform.hpp
     hpx/execution/algorithms/when_all.hpp
     hpx/execution/detail/async_launch_policy_dispatch.hpp
-    hpx/execution/detail/future_exec.hpp
     hpx/execution/detail/execution_parameter_callbacks.hpp
+    hpx/execution/detail/future_exec.hpp
     hpx/execution/detail/post_policy_dispatch.hpp
     hpx/execution/detail/sync_launch_policy_dispatch.hpp
     hpx/execution/execution.hpp
@@ -27,16 +32,20 @@ set(execution_headers
     hpx/execution/executors/auto_chunk_size.hpp
     hpx/execution/executors/dynamic_chunk_size.hpp
     hpx/execution/executors/execution.hpp
-    hpx/execution/executors/execution_information_fwd.hpp
     hpx/execution/executors/execution_information.hpp
-    hpx/execution/executors/execution_parameters_fwd.hpp
     hpx/execution/executors/execution_parameters.hpp
+    hpx/execution/executors/execution_parameters_fwd.hpp
     hpx/execution/executors/fused_bulk_execute.hpp
     hpx/execution/executors/guided_chunk_size.hpp
     hpx/execution/executors/persistent_auto_chunk_size.hpp
     hpx/execution/executors/polymorphic_executor.hpp
     hpx/execution/executors/rebind_executor.hpp
     hpx/execution/executors/static_chunk_size.hpp
+    hpx/execution/sender_future.hpp
+    hpx/execution/traits/detail/simd/vector_pack_alignment_size.hpp
+    hpx/execution/traits/detail/simd/vector_pack_count_bits.hpp
+    hpx/execution/traits/detail/simd/vector_pack_load_store.hpp
+    hpx/execution/traits/detail/simd/vector_pack_type.hpp
     hpx/execution/traits/detail/vc/vector_pack_alignment_size.hpp
     hpx/execution/traits/detail/vc/vector_pack_count_bits.hpp
     hpx/execution/traits/detail/vc/vector_pack_load_store.hpp
@@ -44,8 +53,6 @@ set(execution_headers
     hpx/execution/traits/executor_traits.hpp
     hpx/execution/traits/future_then_result_exec.hpp
     hpx/execution/traits/is_execution_policy.hpp
-    hpx/execution/traits/is_executor.hpp
-    hpx/execution/traits/is_executor_parameters.hpp
     hpx/execution/traits/vector_pack_alignment_size.hpp
     hpx/execution/traits/vector_pack_count_bits.hpp
     hpx/execution/traits/vector_pack_load_store.hpp
@@ -81,8 +88,6 @@ set(execution_compat_headers
     hpx/sync_launch_policy_dispatch.hpp => hpx/execution.hpp
     hpx/traits/executor_traits.hpp => hpx/execution.hpp
     hpx/traits/is_execution_policy.hpp => hpx/execution.hpp
-    hpx/traits/is_executor.hpp => hpx/execution.hpp
-    hpx/traits/is_executor_parameters.hpp => hpx/execution.hpp
 )
 # cmake-format: on
 

@@ -108,7 +108,7 @@ namespace hpx {
 
 #include <hpx/config.hpp>
 #include <hpx/concepts/concepts.hpp>
-#include <hpx/functional/tag_invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/algorithms/traits/is_value_proxy.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/type_support/void_guard.hpp>
@@ -190,22 +190,6 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     util::projection_identity());
             }
         };
-
-        template <typename ExPolicy, typename FwdIter, typename Sent,
-            typename T>
-        static typename util::detail::algorithm_result<ExPolicy, FwdIter>::type
-        fill_(ExPolicy&& policy, FwdIter first, Sent last, T const& value,
-            std::false_type)
-        {
-            return detail::fill<FwdIter>().call(
-                std::forward<ExPolicy>(policy), first, last, value);
-        }
-
-        // forward declare the segmented version of this algorithm
-        template <typename ExPolicy, typename FwdIter, typename T>
-        static typename util::detail::algorithm_result<ExPolicy, FwdIter>::type
-        fill_(ExPolicy&& policy, FwdIter first, FwdIter last, T const& value,
-            std::true_type);
         /// \endcond
     }    // namespace detail
 
@@ -224,14 +208,12 @@ namespace hpx { namespace parallel { inline namespace v1 {
         static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
             "Requires at least forward iterator.");
 
-        typedef hpx::traits::is_segmented_iterator<FwdIter> is_segmented;
-
 #if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-        return detail::fill_(
-            std::forward<ExPolicy>(policy), first, last, value, is_segmented());
+        return detail::fill<FwdIter>().call(
+            std::forward<ExPolicy>(policy), first, last, value);
 #if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
 #pragma GCC diagnostic pop
 #endif
@@ -310,9 +292,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
 namespace hpx {
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::fill
+    // DPO for hpx::fill
     HPX_INLINE_CONSTEXPR_VARIABLE struct fill_t final
-      : hpx::functional::tag<fill_t>
+      : hpx::functional::tag_fallback<fill_t>
     {
     private:
         // clang-format off
@@ -324,21 +306,19 @@ namespace hpx {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<
             ExPolicy>::type
-        tag_invoke(fill_t, ExPolicy&& policy, FwdIter first, FwdIter last,
-            T const& value)
+        tag_fallback_dispatch(fill_t, ExPolicy&& policy, FwdIter first,
+            FwdIter last, T const& value)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Requires at least forward iterator.");
 
-            using is_segmented = hpx::traits::is_segmented_iterator<FwdIter>;
             using result_type =
                 typename hpx::parallel::util::detail::algorithm_result<
                     ExPolicy>::type;
 
             return hpx::util::void_guard<result_type>(),
-                   hpx::parallel::v1::detail::fill_(
-                       std::forward<ExPolicy>(policy), first, last, value,
-                       is_segmented{});
+                   hpx::parallel::v1::detail::fill<FwdIter>().call(
+                       std::forward<ExPolicy>(policy), first, last, value);
         }
 
         // clang-format off
@@ -347,21 +327,21 @@ namespace hpx {
                 hpx::traits::is_forward_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend void tag_invoke(
+        friend void tag_fallback_dispatch(
             fill_t, FwdIter first, FwdIter last, T const& value)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Requires at least forward iterator.");
 
-            hpx::parallel::v1::detail::fill_(
-                hpx::execution::seq, first, last, value, std::false_type{});
+            hpx::parallel::v1::detail::fill<FwdIter>().call(
+                hpx::execution::seq, first, last, value);
         }
     } fill{};
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::fill_n
+    // DPO for hpx::fill_n
     HPX_INLINE_CONSTEXPR_VARIABLE struct fill_n_t final
-      : hpx::functional::tag<fill_n_t>
+      : hpx::functional::tag_fallback<fill_n_t>
     {
     private:
         // clang-format off
@@ -373,8 +353,8 @@ namespace hpx {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_invoke(fill_n_t, ExPolicy&& policy, FwdIter first, Size count,
-            T const& value)
+        tag_fallback_dispatch(fill_n_t, ExPolicy&& policy, FwdIter first,
+            Size count, T const& value)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
                 "Requires at least forward iterator.");
@@ -397,7 +377,7 @@ namespace hpx {
                 hpx::traits::is_forward_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend FwdIter tag_invoke(
+        friend FwdIter tag_fallback_dispatch(
             fill_n_t, FwdIter first, Size count, T const& value)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),

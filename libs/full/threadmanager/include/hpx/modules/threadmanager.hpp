@@ -57,7 +57,7 @@ namespace hpx { namespace threads {
         typedef threads::policies::scheduler_base scheduler_type;
         typedef std::vector<pool_type> pool_vector;
 
-        threadmanager(util::runtime_configuration& rtcfg_,
+        threadmanager(hpx::util::runtime_configuration& rtcfg_,
 #ifdef HPX_HAVE_TIMER_POOL
             util::io_service_pool& timer_pool,
 #endif
@@ -136,6 +136,10 @@ namespace hpx { namespace threads {
         /// \param blocking
         ///
         void stop(bool blocking = true);
+
+        bool is_busy();
+        bool is_idle();
+        void wait();
 
         // \brief Suspend all thread pools.
         void suspend();
@@ -307,9 +311,6 @@ namespace hpx { namespace threads {
         }
 
     public:
-        std::size_t shrink_pool(std::string const& pool_name);
-        std::size_t expand_pool(std::string const& pool_name);
-
         // performance counters
         std::int64_t get_queue_length(bool reset);
 #ifdef HPX_HAVE_THREAD_QUEUE_WAITTIME
@@ -394,7 +395,7 @@ namespace hpx { namespace threads {
     private:
         mutable mutex_type mtx_;    // mutex protecting the members
 
-        util::runtime_configuration& rtcfg_;
+        hpx::util::runtime_configuration& rtcfg_;
         std::vector<pool_id_type> threads_lookup_;
 
 #ifdef HPX_HAVE_TIMER_POOL

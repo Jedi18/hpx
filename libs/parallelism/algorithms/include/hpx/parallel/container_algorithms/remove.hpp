@@ -10,8 +10,7 @@
 #pragma once
 
 #if defined(DOXYGEN)
-namespace hpx {
-
+namespace hpx { namespace ranges {
     /// Removes all elements that are equal to \a value from the range
     /// [first, last) and and returns a subrange [ret, last), where ret
     /// is a past-the-end iterator for the new end of the range.
@@ -464,7 +463,7 @@ namespace hpx {
         subrange_t<typename hpx::traits::range_iterator<Rng>::type>>::type
     remove_if(ExPolicy&& policy, Rng&& rng, Pred&& pred, Proj&& proj = Proj());
 
-}    // namespace hpx
+}}    // namespace hpx::ranges
 
 #else    // DOXYGEN
 
@@ -538,7 +537,7 @@ namespace hpx { namespace ranges {
     using subrange_t = hpx::util::iterator_range<I, S>;
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::ranges::remove_if
+    // DPO for hpx::ranges::remove_if
     HPX_INLINE_CONSTEXPR_VARIABLE struct remove_if_t final
       : hpx::functional::tag<remove_if_t>
     {
@@ -555,7 +554,7 @@ namespace hpx { namespace ranges {
                 >
             )>
         // clang-format on
-        friend subrange_t<Iter, Sent> tag_invoke(hpx::ranges::remove_if_t,
+        friend subrange_t<Iter, Sent> tag_dispatch(hpx::ranges::remove_if_t,
             Iter first, Sent sent, Pred&& pred, Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_input_iterator<Iter>::value),
@@ -582,7 +581,7 @@ namespace hpx { namespace ranges {
             )>
         // clang-format on
         friend subrange_t<typename hpx::traits::range_iterator<Rng>::type>
-        tag_invoke(hpx::ranges::remove_if_t, Rng&& rng, Pred&& pred,
+        tag_dispatch(hpx::ranges::remove_if_t, Rng&& rng, Pred&& pred,
             Proj&& proj = Proj())
         {
             static_assert(
@@ -615,7 +614,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             subrange_t<FwdIter, Sent>>::type
-        tag_invoke(hpx::ranges::remove_if_t, ExPolicy&& policy, FwdIter first,
+        tag_dispatch(hpx::ranges::remove_if_t, ExPolicy&& policy, FwdIter first,
             Sent sent, Pred&& pred, Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -641,7 +640,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             subrange_t<typename hpx::traits::range_iterator<Rng>::type>>::type
-        tag_invoke(hpx::ranges::remove_if_t, ExPolicy&& policy, Rng&& rng,
+        tag_dispatch(hpx::ranges::remove_if_t, ExPolicy&& policy, Rng&& rng,
             Pred&& pred, Proj&& proj = Proj())
         {
             static_assert(
@@ -662,7 +661,7 @@ namespace hpx { namespace ranges {
     } remove_if{};
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::ranges::remove
+    // DPO for hpx::ranges::remove
     HPX_INLINE_CONSTEXPR_VARIABLE struct remove_t final
       : hpx::functional::tag<remove_t>
     {
@@ -676,7 +675,7 @@ namespace hpx { namespace ranges {
                 hpx::traits::is_sentinel_for<Sent, Iter>::value
             )>
         // clang-format on
-        friend subrange_t<Iter, Sent> tag_invoke(hpx::ranges::remove_t,
+        friend subrange_t<Iter, Sent> tag_dispatch(hpx::ranges::remove_t,
             Iter first, Sent last, T const& value, Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_input_iterator<Iter>::value),
@@ -699,7 +698,7 @@ namespace hpx { namespace ranges {
             )>
         // clang-format on
         friend subrange_t<typename hpx::traits::range_iterator<Rng>::type>
-        tag_invoke(hpx::ranges::remove_t, Rng&& rng, T const& value,
+        tag_dispatch(hpx::ranges::remove_t, Rng&& rng, T const& value,
             Proj&& proj = Proj())
         {
             static_assert(
@@ -729,7 +728,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             subrange_t<FwdIter, Sent>>::type
-        tag_invoke(hpx::ranges::remove_t, ExPolicy&& policy, FwdIter first,
+        tag_dispatch(hpx::ranges::remove_t, ExPolicy&& policy, FwdIter first,
             Sent last, T const& value, Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -754,7 +753,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             subrange_t<typename hpx::traits::range_iterator<Rng>::type>>::type
-        tag_invoke(hpx::ranges::remove_t, ExPolicy&& policy, Rng&& rng,
+        tag_dispatch(hpx::ranges::remove_t, ExPolicy&& policy, Rng&& rng,
             T const& value, Proj&& proj = Proj())
         {
             static_assert(

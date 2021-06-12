@@ -14,6 +14,15 @@
 #error Boost.Config was included before the hpx config header. This might lead to subtle failures and compile errors. Please include <hpx/config.hpp> before any other boost header
 #endif
 
+#include <hpx/config/defines.hpp>
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+// On Windows, make sure winsock.h is not included even if windows.h is
+// included before winsock2.h
+#define _WINSOCKAPI_
+#include <winsock2.h>
+#endif
+
 #include <hpx/config/attributes.hpp>
 #include <hpx/config/branch_hints.hpp>
 #include <hpx/config/compiler_fence.hpp>
@@ -21,12 +30,12 @@
 #include <hpx/config/compiler_specific.hpp>
 #include <hpx/config/constexpr.hpp>
 #include <hpx/config/debug.hpp>
-#include <hpx/config/defines.hpp>
 #include <hpx/config/deprecation.hpp>
 #include <hpx/config/emulate_deleted.hpp>
 #include <hpx/config/export_definitions.hpp>
 #include <hpx/config/forceinline.hpp>
 #include <hpx/config/lambda_capture.hpp>
+#include <hpx/config/lambda_capture_this.hpp>
 #include <hpx/config/manual_profiling.hpp>
 #include <hpx/config/modules_enabled.hpp>
 #include <hpx/config/threads_stack.hpp>

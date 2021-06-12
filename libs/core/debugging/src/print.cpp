@@ -22,7 +22,6 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -60,6 +59,8 @@ namespace hpx { namespace debug {
 
         template HPX_CORE_EXPORT void print_dec(
             std::ostream&, std::atomic<int> const&, int);
+        template HPX_CORE_EXPORT void print_dec(
+            std::ostream&, std::atomic<unsigned int> const&, int);
     }    // namespace detail
 
     // ------------------------------------------------------------------

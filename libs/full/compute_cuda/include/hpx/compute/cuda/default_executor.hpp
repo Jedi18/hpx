@@ -11,7 +11,7 @@
 #if defined(HPX_HAVE_GPU_SUPPORT)
 #include <hpx/datastructures/tuple.hpp>
 #include <hpx/execution/traits/executor_traits.hpp>
-#include <hpx/execution/traits/is_executor.hpp>
+#include <hpx/execution_base/traits/is_executor.hpp>
 #include <hpx/futures/future.hpp>
 #include <hpx/iterator_support/range.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
@@ -175,7 +175,8 @@ namespace hpx { namespace cuda { namespace experimental {
         }
         /// \endcond
 
-        std::size_t processing_units_count() const
+        template <typename Parameters>
+        std::size_t processing_units_count(Parameters&&) const
         {
             return target_.native_handle().processing_units();
         }

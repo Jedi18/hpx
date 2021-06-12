@@ -9,8 +9,8 @@
 #include <hpx/config.hpp>
 #include <hpx/async_mpi/mpi_future.hpp>
 #include <hpx/execution/executors/static_chunk_size.hpp>
-#include <hpx/execution/traits/is_executor.hpp>
 #include <hpx/execution_base/execution.hpp>
+#include <hpx/execution_base/traits/is_executor.hpp>
 #include <hpx/modules/mpi_base.hpp>
 
 #include <cstddef>
@@ -60,8 +60,8 @@ namespace hpx { namespace mpi { namespace experimental {
 
         std::size_t in_flight_estimate() const
         {
-            return detail::get_number_of_enqueued_requests() +
-                detail::get_number_of_active_requests();
+            return detail::get_mpi_info().active_futures_size_ +
+                detail::get_mpi_info().request_queue_size_;
         }
 
     private:

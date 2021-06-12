@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2017 Hartmut Kaiser
+//  Copyright (c) 2007-2021 Hartmut Kaiser
 //  Copyright (c)      2017 Shoshana Jakobovits
 //  Copyright (c) 2010-2011 Phillip LeBlanc, Dylan Stark
 //  Copyright (c)      2011 Bryce Lelbach
@@ -23,6 +23,7 @@
 #include <hpx/hpx_user_main_config.hpp>
 #include <hpx/init_runtime/detail/init_logging.hpp>
 #include <hpx/init_runtime/detail/run_or_start.hpp>
+#include <hpx/init_runtime_local/init_runtime_local.hpp>
 #include <hpx/modules/errors.hpp>
 #include <hpx/modules/filesystem.hpp>
 #include <hpx/modules/format.hpp>
@@ -31,7 +32,6 @@
 #include <hpx/modules/testing.hpp>
 #include <hpx/modules/timing.hpp>
 #include <hpx/parallel/util/detail/handle_exception_termination_handler.hpp>
-#include <hpx/program_options/options_description.hpp>
 #include <hpx/program_options/parsers.hpp>
 #include <hpx/program_options/variables_map.hpp>
 #include <hpx/resource_partitioner/partitioner.hpp>
@@ -52,10 +52,6 @@
 #include <hpx/type_support/pack.hpp>
 #include <hpx/type_support/unused.hpp>
 #include <hpx/util/from_string.hpp>
-
-#include <hpx/program_options/options_description.hpp>
-#include <hpx/program_options/parsers.hpp>
-#include <hpx/program_options/variables_map.hpp>
 
 #ifdef HPX_HAVE_MODULE_MPI_BASE
 #include <hpx/modules/mpi_base.hpp>
@@ -96,11 +92,6 @@
 #if !defined(HPX_WINDOWS)
 #include <signal.h>
 #endif
-
-///////////////////////////////////////////////////////////////////////////////
-namespace hpx {
-    void set_error_handlers();
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx_startup {
@@ -256,13 +247,10 @@ namespace hpx { namespace detail {
     ///////////////////////////////////////////////////////////////////////////
     void list_symbolic_name(std::string const& name, hpx::id_type const& id)
     {
-        std::ostringstream strm;
-
-        strm << name << ", " << id << ", "
-             << (id.get_management_type() == id_type::managed ? "managed" :
-                                                                "unmanaged");
-
-        print(strm.str());
+        std::string str = hpx::util::format("{}, {}, {}", name, id,
+            (id.get_management_type() == id_type::managed ? "managed" :
+                                                            "unmanaged"));
+        print(str);
     }
 
     void list_symbolic_names()
@@ -343,25 +331,6 @@ namespace hpx {
     namespace detail {
 
         ///////////////////////////////////////////////////////////////////////
-        struct dump_config
-        {
-            dump_config(hpx::runtime const& rt)
-              : rt_(std::cref(rt))
-            {
-            }
-
-            void operator()() const
-            {
-                std::cout << "Configuration after runtime start:\n";
-                std::cout << "----------------------------------\n";
-                rt_.get().get_config().dump(0, std::cout);
-                std::cout << "----------------------------------\n";
-            }
-
-            std::reference_wrapper<hpx::runtime const> rt_;
-        };
-
-        ///////////////////////////////////////////////////////////////////////
         void activate_global_options(
             util::command_line_handling& cmdline, int argc, char** argv)
         {
@@ -403,8 +372,11 @@ namespace hpx {
                 cmdline.rtcfg_.get_spinlock_deadlock_detection_limit());
 #endif
 
-            util::detail::init_logging(
-                cmdline.rtcfg_, cmdline.rtcfg_.mode_ == runtime_mode::console);
+#if defined(HPX_HAVE_LOGGING)
+            util::detail::init_logging_full(cmdline.rtcfg_);
+#else
+            util::detail::warn_if_logging_requested(cmdline.rtcfg_);
+#endif
 
 #if defined(HPX_HAVE_NETWORKING)
             if (cmdline.num_localities_ != 1 || cmdline.node_ != 0 ||
@@ -639,7 +611,7 @@ namespace hpx {
 
             // Dump the configuration after all components have been loaded.
             if (vm.count("hpx:dump-config"))
-                rt.add_startup_function(dump_config(rt));
+                rt.add_startup_function(hpx::local::detail::dump_config(rt));
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -908,19 +880,14 @@ namespace hpx {
                         cmdline.rtcfg_, &hpx::detail::pre_main));
                     break;
 #else
-                    char const* mode_name =
-                        get_runtime_mode_name(cmdline.rtcfg_.mode_);
-                    std::ostringstream s;
-                    s << "Attempted to start the runtime in the mode \""
-                      << mode_name
-                      << "\", but HPX was compiled with "
-                         "HPX_WITH_DISTRIBUTED_RUNTIME=OFF, and \""
-                      << mode_name
-                      << "\" requires HPX_WITH_DISTRIBUTED_RUNTIME=ON. "
-                         "Recompile HPX with HPX_WITH_DISTRIBUTED_RUNTIME=ON "
-                         "or change the runtime mode.";
-                    HPX_THROW_EXCEPTION(
-                        invalid_status, "run_or_start", s.str());
+                    HPX_THROW_EXCEPTION(invalid_status, "run_or_start",
+                        "Attempted to start the runtime in the mode \"{1}\", "
+                        "but HPX was compiled with "
+                        "HPX_WITH_DISTRIBUTED_RUNTIME=OFF, and \"{1}\" "
+                        "requires HPX_WITH_DISTRIBUTED_RUNTIME=ON. "
+                        "Recompile HPX with HPX_WITH_DISTRIBUTED_RUNTIME=ON or "
+                        "change the runtime mode.",
+                        get_runtime_mode_name(cmdline.rtcfg_.mode_));
                     break;
 #endif
                 }
@@ -1101,113 +1068,18 @@ namespace hpx {
     ///////////////////////////////////////////////////////////////////////////
     int stop(error_code& ec)
     {
-        if (threads::get_self_ptr())
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::stop",
-                "this function cannot be called from an HPX thread");
-            return -1;
-        }
-
-        std::unique_ptr<runtime> rt(get_runtime_ptr());    // take ownership!
-        if (nullptr == rt.get())
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::stop",
-                "the runtime system is not active (did you already "
-                "call hpx::stop?)");
-            return -1;
-        }
-
-        int result = rt->wait();
-
-        rt->stop();
-        rt->rethrow_exception();
-
-        return result;
+        return hpx::local::stop(ec);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     int suspend(error_code& ec)
     {
-        if (threads::get_self_ptr())
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::suspend",
-                "this function cannot be called from an HPX thread");
-            return -1;
-        }
-
-        runtime* rt = get_runtime_ptr();
-        if (nullptr == rt)
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::suspend",
-                "the runtime system is not active (did you already "
-                "call hpx::stop?)");
-            return -1;
-        }
-
-        return rt->suspend();
+        return hpx::local::suspend(ec);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     int resume(error_code& ec)
     {
-        if (threads::get_self_ptr())
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::resume",
-                "this function cannot be called from an HPX thread");
-            return -1;
-        }
-
-        runtime* rt = get_runtime_ptr();
-        if (nullptr == rt)
-        {
-            HPX_THROWS_IF(ec, invalid_status, "hpx::resume",
-                "the runtime system is not active (did you already "
-                "call hpx::stop?)");
-            return -1;
-        }
-
-        return rt->resume();
+        return hpx::local::resume(ec);
     }
-
-    namespace detail {
-        int init_helper(hpx::program_options::variables_map& /*vm*/,
-            util::function_nonser<int(int, char**)> const& f)
-        {
-            std::string cmdline(
-                hpx::get_config_entry("hpx.reconstructed_cmd_line", ""));
-
-            using namespace hpx::program_options;
-#if defined(HPX_WINDOWS)
-            std::vector<std::string> args = split_winmain(cmdline);
-#else
-            std::vector<std::string> args = split_unix(cmdline);
-#endif
-
-            // Copy all arguments which are not hpx related to a temporary array
-            std::vector<char*> argv(args.size() + 1);
-            std::size_t argcount = 0;
-            for (std::size_t i = 0; i != args.size(); ++i)
-            {
-                if (0 != args[i].find("--hpx:"))
-                {
-                    argv[argcount++] = const_cast<char*>(args[i].data());
-                }
-                else if (6 == args[i].find("positional", 6))
-                {
-                    std::string::size_type p = args[i].find_first_of('=');
-                    if (p != std::string::npos)
-                    {
-                        args[i] = args[i].substr(p + 1);
-                        argv[argcount++] = const_cast<char*>(args[i].data());
-                    }
-                }
-            }
-
-            // add a single nullptr in the end as some application rely on that
-            argv[argcount] = nullptr;
-
-            // Invoke custom startup functions
-            return f(static_cast<int>(argcount), argv.data());
-        }
-    }    // namespace detail
 }    // namespace hpx

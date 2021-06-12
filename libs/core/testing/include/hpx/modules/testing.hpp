@@ -23,7 +23,6 @@
 #include <cstdint>
 #include <mutex>
 #include <ostream>
-#include <sstream>
 
 namespace hpx { namespace util {
 
@@ -49,7 +48,7 @@ namespace hpx { namespace util {
             mutex_type mutex_;
 
         public:
-            fixture(std::ostream& stream)
+            explicit fixture(std::ostream& stream)
               : stream_(stream)
             {
             }

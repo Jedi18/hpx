@@ -225,6 +225,7 @@ namespace hpx {
 #include <hpx/config.hpp>
 #include <hpx/executors/execution_policy.hpp>
 #include <hpx/functional/invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/iterator_support/range.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/parallel/algorithms/detail/dispatch.hpp>
@@ -289,7 +290,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                               FwdIter part_begin,
                               std::size_t part_size) mutable -> bool {
                     FwdIter trail = part_begin++;
-                    util::loop_n<ExPolicy>(part_begin, part_size - 1,
+                    util::detail::loop_n<std::decay_t<ExPolicy>>(part_begin,
+                        part_size - 1,
                         [&trail, &tok, &pred_projected](FwdIter it) -> void {
                             if (hpx::util::invoke(
                                     pred_projected, *it, *trail++))
@@ -446,7 +448,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
 namespace hpx {
     HPX_INLINE_CONSTEXPR_VARIABLE struct is_sorted_t final
-      : hpx::functional::tag<is_sorted_t>
+      : hpx::functional::tag_fallback<is_sorted_t>
     {
     private:
         template <typename FwdIter,
@@ -461,7 +463,7 @@ namespace hpx {
                 >
             )>
         // clang-format on
-        friend bool tag_invoke(
+        friend bool tag_fallback_dispatch(
             hpx::is_sorted_t, FwdIter first, FwdIter last, Pred&& pred = Pred())
         {
             return hpx::parallel::v1::detail::is_sorted<FwdIter, FwdIter>()
@@ -485,8 +487,8 @@ namespace hpx {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_invoke(hpx::is_sorted_t, ExPolicy&& policy, FwdIter first,
-            FwdIter last, Pred&& pred = Pred())
+        tag_fallback_dispatch(hpx::is_sorted_t, ExPolicy&& policy,
+            FwdIter first, FwdIter last, Pred&& pred = Pred())
         {
             return hpx::parallel::v1::detail::is_sorted<FwdIter, FwdIter>()
                 .call(std::forward<ExPolicy>(policy), first, last,
@@ -496,7 +498,7 @@ namespace hpx {
     } is_sorted{};
 
     HPX_INLINE_CONSTEXPR_VARIABLE struct is_sorted_until_t final
-      : hpx::functional::tag<is_sorted_until_t>
+      : hpx::functional::tag_fallback<is_sorted_until_t>
     {
     private:
         template <typename FwdIter,
@@ -511,8 +513,8 @@ namespace hpx {
                 >
             )>
         // clang-format on
-        friend FwdIter tag_invoke(hpx::is_sorted_until_t, FwdIter first,
-            FwdIter last, Pred&& pred = Pred())
+        friend FwdIter tag_fallback_dispatch(hpx::is_sorted_until_t,
+            FwdIter first, FwdIter last, Pred&& pred = Pred())
         {
             return hpx::parallel::v1::detail::is_sorted_until<FwdIter,
                 FwdIter>()
@@ -536,8 +538,8 @@ namespace hpx {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_invoke(hpx::is_sorted_until_t, ExPolicy&& policy, FwdIter first,
-            FwdIter last, Pred&& pred = Pred())
+        tag_fallback_dispatch(hpx::is_sorted_until_t, ExPolicy&& policy,
+            FwdIter first, FwdIter last, Pred&& pred = Pred())
         {
             return hpx::parallel::v1::detail::is_sorted_until<FwdIter,
                 FwdIter>()

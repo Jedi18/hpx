@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2018 Hartmut Kaiser
+//  Copyright (c) 2007-2021 Hartmut Kaiser
 //  Copyright (c) 2016 Thomas Heller
 //
 //  SPDX-License-Identifier: BSL-1.0
@@ -89,7 +89,7 @@ namespace hpx {
     /// Remarks: If \a f returns a result, the result is ignored.
     ///
     template <typename I, typename... Args>
-    void for_loop(typename std::decay<I>::type first, I last, Args&&... args);
+    void for_loop(std::decay_t<I> first, I last, Args&&... args);
 
     /// The for_loop implements loop functionality over a range specified by
     /// integral or iterator bounds. For the iterator case, these algorithms
@@ -179,8 +179,7 @@ namespace hpx {
     ///
     template <typename ExPolicy, typename I, typename... Args>
     typename util::detail::algorithm_result<ExPolicy>::type for_loop(
-        ExPolicy&& policy, typename std::decay<I>::type first, I last,
-        Args&&... args);
+        ExPolicy&& policy, std::decay_t<I> first, I last, Args&&... args);
 
     /// The for_loop_strided implements loop functionality over a range
     /// specified by integral or iterator bounds. For the iterator case, these
@@ -267,7 +266,7 @@ namespace hpx {
     ///
     template <typename I, typename S, typename... Args>
     void for_loop_strided(
-        typename std::decay<I>::type first, I last, S stride, Args&&... args);
+        std::decay_t<I> first, I last, S stride, Args&&... args);
 
     /// The for_loop_strided implements loop functionality over a range
     /// specified by integral or iterator bounds. For the iterator case, these
@@ -363,7 +362,7 @@ namespace hpx {
     ///
     template <typename ExPolicy, typename I, typename S, typename... Args>
     typename util::detail::algorithm_result<ExPolicy>::type for_loop_strided(
-        ExPolicy&& policy, typename std::decay<I>::type first, I last, S stride,
+        ExPolicy&& policy, std::decay_t<I> first, I last, S stride,
         Args&&... args);
 
     /// The for_loop_n implements loop functionality over a range specified by
@@ -736,7 +735,7 @@ namespace hpx {
 #include <hpx/datastructures/tuple.hpp>
 #include <hpx/execution/algorithms/detail/predicates.hpp>
 #include <hpx/functional/detail/invoke.hpp>
-#include <hpx/functional/tag_invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/modules/executors.hpp>
 #include <hpx/modules/threading_base.hpp>
@@ -786,11 +785,10 @@ namespace hpx {
 
             template <typename... Ts, std::size_t... Is>
             HPX_HOST_DEVICE HPX_FORCEINLINE constexpr void next_iteration(
-                hpx::tuple<Ts...>& args, hpx::util::index_pack<Is...>,
-                std::size_t part_index)
+                hpx::tuple<Ts...>& args, hpx::util::index_pack<Is...>)
             {
                 int const _sequencer[] = {
-                    0, (hpx::get<Is>(args).next_iteration(part_index), 0)...};
+                    0, (hpx::get<Is>(args).next_iteration(), 0)...};
                 (void) _sequencer;
             }
 
@@ -811,7 +809,7 @@ namespace hpx {
             template <typename F, typename S, typename... Ts>
             struct part_iterations<F, S, hpx::tuple<Ts...>>
             {
-                typedef typename std::decay<F>::type fun_type;
+                using fun_type = std::decay_t<F>;
 
                 fun_type f_;
                 S stride_;
@@ -833,21 +831,56 @@ namespace hpx {
                         Ts)>::type();
                     detail::init_iteration(args_, pack, part_index);
 
-                    while (part_steps != 0)
+                    if (stride_ == 1)
                     {
-                        detail::invoke_iteration(args_, pack, f_, part_begin);
+                        while (part_steps-- != 0)
+                        {
+                            detail::invoke_iteration(
+                                args_, pack, f_, part_begin++);
+                            detail::next_iteration(args_, pack);
+                        }
+                    }
+                    else if (stride_ > 0)
+                    {
+                        while (part_steps >= std::size_t(stride_))
+                        {
+                            detail::invoke_iteration(
+                                args_, pack, f_, part_begin);
 
-                        // NVCC seems to have a bug with std::min...
-                        std::size_t chunk =
-                            S(part_steps) < stride_ ? part_steps : stride_;
+                            part_begin =
+                                parallel::v1::detail::next(part_begin, stride_);
+                            part_steps -= stride_;
 
-                        // modifies 'chunk'
-                        part_begin = parallel::v1::detail::next(
-                            part_begin, part_steps, chunk);
-                        part_steps -= chunk;
-                        part_index += chunk;
+                            detail::next_iteration(args_, pack);
+                        }
 
-                        detail::next_iteration(args_, pack, part_index);
+                        if (part_steps != 0)
+                        {
+                            detail::invoke_iteration(
+                                args_, pack, f_, part_begin);
+                            detail::next_iteration(args_, pack);
+                        }
+                    }
+                    else
+                    {
+                        while (part_steps >= std::size_t(-stride_))
+                        {
+                            detail::invoke_iteration(
+                                args_, pack, f_, part_begin);
+
+                            part_begin =
+                                parallel::v1::detail::next(part_begin, stride_);
+                            part_steps += stride_;
+
+                            detail::next_iteration(args_, pack);
+                        }
+
+                        if (part_steps != 0)
+                        {
+                            detail::invoke_iteration(
+                                args_, pack, f_, part_begin);
+                            detail::next_iteration(args_, pack);
+                        }
                     }
                 }
 
@@ -863,7 +896,7 @@ namespace hpx {
             template <typename F, typename S>
             struct part_iterations<F, S, hpx::tuple<>>
             {
-                typedef typename std::decay<F>::type fun_type;
+                using fun_type = std::decay_t<F>;
 
                 fun_type f_;
                 S stride_;
@@ -879,18 +912,46 @@ namespace hpx {
                 HPX_HOST_DEVICE constexpr void execute(
                     B part_begin, std::size_t part_steps)
                 {
-                    while (part_steps != 0)
+                    if (stride_ == 1)
                     {
-                        HPX_INVOKE(f_, part_begin);
+                        using pred = std::integral_constant<bool,
+                            hpx::traits::is_random_access_iterator<B>::value ||
+                                std::is_integral<B>::value>;
 
-                        // NVCC seems to have a bug with std::min...
-                        std::size_t chunk =
-                            S(part_steps) < stride_ ? part_steps : stride_;
+                        parallel::util::detail::loop_n_helper::call(
+                            part_begin, part_steps, f_, pred());
+                    }
+                    else if (stride_ > 0)
+                    {
+                        while (part_steps >= std::size_t(stride_))
+                        {
+                            HPX_INVOKE(f_, part_begin);
 
-                        // modifies 'chunk'
-                        part_begin = parallel::v1::detail::next(
-                            part_begin, part_steps, chunk);
-                        part_steps -= chunk;
+                            part_begin =
+                                parallel::v1::detail::next(part_begin, stride_);
+                            part_steps -= stride_;
+                        }
+
+                        if (part_steps != 0)
+                        {
+                            HPX_INVOKE(f_, part_begin);
+                        }
+                    }
+                    else
+                    {
+                        while (part_steps >= std::size_t(-stride_))
+                        {
+                            HPX_INVOKE(f_, part_begin);
+
+                            part_begin =
+                                parallel::v1::detail::next(part_begin, stride_);
+                            part_steps += stride_;
+                        }
+
+                        if (part_steps != 0)
+                        {
+                            HPX_INVOKE(f_, part_begin);
+                        }
                     }
                 }
 
@@ -899,19 +960,7 @@ namespace hpx {
                     B part_begin, std::size_t part_steps, std::size_t)
                 {
                     hpx::util::annotate_function annotate(f_);
-                    if (stride_ == 1)
-                    {
-                        using pred = std::integral_constant<bool,
-                            hpx::traits::is_random_access_iterator<B>::value ||
-                                std::is_integral<B>::value>;
-
-                        parallel::util::detail::loop_n<B>::call(
-                            part_begin, part_steps, f_, pred());
-                    }
-                    else
-                    {
-                        execute(part_begin, part_steps);
-                    }
+                    execute(part_begin, part_steps);
                 }
             };
 
@@ -923,39 +972,109 @@ namespace hpx {
                 {
                 }
 
-                template <typename ExPolicy, typename InIter, typename Size,
-                    typename S, typename F, typename... Args>
+                template <typename ExPolicy, typename InIter, typename S,
+                    typename F>
                 HPX_HOST_DEVICE static hpx::util::unused_type sequential(
-                    ExPolicy /* policy */, InIter first, Size size, S stride,
-                    F&& f, Args&&... args)
+                    ExPolicy&&, InIter first, std::size_t count, S stride,
+                    F&& f)
                 {
-                    std::size_t part_index = 0;
-                    int const init_sequencer[] = {
-                        0, (args.init_iteration(0), 0)...};
+                    if (stride == 1)
+                    {
+                        using pred = std::integral_constant<bool,
+                            hpx::traits::is_random_access_iterator<
+                                InIter>::value ||
+                                std::is_integral<InIter>::value>;
+
+                        parallel::util::detail::loop_n_helper::call(
+                            first, count, std::forward<F>(f), pred());
+                    }
+                    else if (stride > 0)
+                    {
+                        while (count >= std::size_t(stride))
+                        {
+                            HPX_INVOKE(f, first);
+
+                            first = parallel::v1::detail::next(first, stride);
+                            count -= stride;
+                        }
+
+                        if (count != 0)
+                        {
+                            HPX_INVOKE(f, first);
+                        }
+                    }
+                    else
+                    {
+                        while (count >= std::size_t(-stride))
+                        {
+                            HPX_INVOKE(f, first);
+
+                            first = parallel::v1::detail::next(first, stride);
+                            count += stride;
+                        }
+
+                        if (count != 0)
+                        {
+                            HPX_INVOKE(f, first);
+                        }
+                    }
+
+                    return hpx::util::unused_type();
+                }
+
+                template <typename ExPolicy, typename InIter, typename Size,
+                    typename S, typename F, typename Arg, typename... Args>
+                HPX_HOST_DEVICE static hpx::util::unused_type sequential(
+                    ExPolicy&&, InIter first, Size size, S stride, F&& f,
+                    Arg&& arg, Args&&... args)
+                {
+                    int const init_sequencer[] = {(arg.init_iteration(0), 0),
+                        (args.init_iteration(0), 0)...};
                     (void) init_sequencer;
 
                     std::size_t count = size;
-                    while (count != 0)
+                    if (stride > 0)
                     {
-                        HPX_INVOKE(f, first, args.iteration_value()...);
+                        while (count >= std::size_t(stride))
+                        {
+                            HPX_INVOKE(f, first, arg.iteration_value(),
+                                args.iteration_value()...);
 
-                        // NVCC seems to have a bug with std::min...
-                        std::size_t chunk =
-                            (S(count) < stride) ? count : stride;
+                            first = parallel::v1::detail::next(first, stride);
+                            count -= stride;
 
-                        // modifies 'chunk'
-                        first = parallel::v1::detail::next(first, count, chunk);
-                        count -= chunk;
-                        part_index += chunk;
+                            int const next_sequencer[] = {
+                                (arg.next_iteration(), 0),
+                                (args.next_iteration(), 0)...};
+                            (void) next_sequencer;
+                        }
+                    }
+                    else
+                    {
+                        while (count >= std::size_t(-stride))
+                        {
+                            HPX_INVOKE(f, first, arg.iteration_value(),
+                                args.iteration_value()...);
 
-                        int const next_sequencer[] = {
-                            0, (args.next_iteration(part_index), 0)...};
-                        (void) next_sequencer;
+                            first = parallel::v1::detail::next(first, stride);
+                            count += stride;
+
+                            int const next_sequencer[] = {
+                                (arg.next_iteration(), 0),
+                                (args.next_iteration(), 0)...};
+                            (void) next_sequencer;
+                        }
+                    }
+
+                    if (count != 0)
+                    {
+                        HPX_INVOKE(f, first, arg.iteration_value(),
+                            args.iteration_value()...);
                     }
 
                     // make sure live-out variables are properly set on return
-                    int const exit_sequencer[] = {
-                        0, (args.exit_iteration(size), 0)...};
+                    int const exit_sequencer[] = {(arg.exit_iteration(size), 0),
+                        (args.exit_iteration(size), 0)...};
                     (void) exit_sequencer;
 
                     return hpx::util::unused_type();
@@ -964,7 +1083,7 @@ namespace hpx {
                 template <typename ExPolicy, typename B, typename Size,
                     typename S, typename F, typename... Ts>
                 static typename util::detail::algorithm_result<ExPolicy>::type
-                parallel(ExPolicy policy, B first, Size size, S stride, F&& f,
+                parallel(ExPolicy&& policy, B first, Size size, S stride, F&& f,
                     Ts&&... ts)
                 {
                     if (size == 0)
@@ -972,8 +1091,7 @@ namespace hpx {
 
                     // we need to decay copy here to properly transport everything
                     // to a GPU device
-                    typedef hpx::tuple<typename std::decay<Ts>::type...>
-                        args_type;
+                    using args_type = hpx::tuple<std::decay_t<Ts>...>;
 
                     args_type args =
                         hpx::forward_as_tuple(std::forward<Ts>(ts)...);
@@ -1034,9 +1152,6 @@ namespace hpx {
                 ExPolicy&& policy, B first, Size size, S stride,
                 hpx::util::index_pack<Is...>, Args&&... args)
             {
-                // Size should be non-negative
-                HPX_ASSERT(size >= 0);
-
                 // stride shall not be zero
                 HPX_ASSERT(stride != 0);
 
@@ -1068,9 +1183,8 @@ namespace hpx {
                     std::is_integral<I>::value))>
         HPX_DEPRECATED_V(1, 6,
             "hpx::parallel::for_loop is deprecated, use hpx::for_loop instead")
-        typename util::detail::algorithm_result<ExPolicy>::type
-            for_loop(ExPolicy&& policy, typename std::decay<I>::type first,
-                I last, Args&&... args)
+        typename util::detail::algorithm_result<ExPolicy>::type for_loop(
+            ExPolicy&& policy, std::decay_t<I> first, I last, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop must be called with at least a function object");
@@ -1086,8 +1200,7 @@ namespace hpx {
                 std::is_integral<I>::value)>
         HPX_DEPRECATED_V(1, 6,
             "hpx::parallel::for_loop is deprecated, use hpx::for_loop instead")
-        void for_loop(
-            typename std::decay<I>::type first, I last, Args&&... args)
+        void for_loop(std::decay_t<I> first, I last, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop must be called with at least a function object");
@@ -1104,9 +1217,8 @@ namespace hpx {
         HPX_DEPRECATED_V(1, 6,
             "hpx::parallel::for_loop is deprecated, use hpx::for_loop instead")
         typename util::detail::algorithm_result<ExPolicy>::type
-            for_loop_strided(ExPolicy&& policy,
-                typename std::decay<I>::type first, I last, S stride,
-                Args&&... args)
+            for_loop_strided(ExPolicy&& policy, std::decay_t<I> first, I last,
+                S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_strided must be called with at least a function "
@@ -1124,8 +1236,8 @@ namespace hpx {
                     std::is_integral<I>::value))>
         HPX_DEPRECATED_V(1, 6,
             "hpx::parallel::for_loop is deprecated, use hpx::for_loop instead")
-        void for_loop_strided(typename std::decay<I>::type first, I last,
-            S stride, Args&&... args)
+        void for_loop_strided(
+            std::decay_t<I> first, I last, S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_strided must be called with at least a function "
@@ -1211,8 +1323,9 @@ namespace hpx {
         }
     }}    // namespace parallel::v2
 
+    ///////////////////////////////////////////////////////////////////////////
     HPX_INLINE_CONSTEXPR_VARIABLE struct for_loop_t final
-      : hpx::functional::tag<for_loop_t>
+      : hpx::functional::tag_fallback<for_loop_t>
     {
     private:
         // clang-format off
@@ -1224,8 +1337,9 @@ namespace hpx {
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy>::type
-        tag_invoke(hpx::for_loop_t, ExPolicy&& policy,
-            typename std::decay<I>::type first, I last, Args&&... args)
+
+        tag_fallback_dispatch(hpx::for_loop_t, ExPolicy&& policy,
+            std::decay_t<I> first, I last, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop must be called with at least a function object");
@@ -1244,8 +1358,9 @@ namespace hpx {
                 std::is_integral<I>::value
             )>
         // clang-format on
-        friend void tag_invoke(hpx::for_loop_t,
-            typename std::decay<I>::type first, I last, Args&&... args)
+
+        friend void tag_fallback_dispatch(
+            hpx::for_loop_t, std::decay_t<I> first, I last, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop must be called with at least a function object");
@@ -1257,8 +1372,9 @@ namespace hpx {
         }
     } for_loop{};
 
+    ///////////////////////////////////////////////////////////////////////////
     HPX_INLINE_CONSTEXPR_VARIABLE struct for_loop_strided_t final
-      : hpx::functional::tag<for_loop_strided_t>
+      : hpx::functional::tag_fallback<for_loop_strided_t>
     {
     private:
         // clang-format off
@@ -1271,9 +1387,9 @@ namespace hpx {
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy>::type
-        tag_invoke(hpx::for_loop_strided_t, ExPolicy&& policy,
-            typename std::decay<I>::type first, I last, S stride,
-            Args&&... args)
+
+        tag_fallback_dispatch(hpx::for_loop_strided_t, ExPolicy&& policy,
+            std::decay_t<I> first, I last, S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_strided must be called with at least a function "
@@ -1294,9 +1410,9 @@ namespace hpx {
                  std::is_integral<I>::value)
             )>
         // clang-format on
-        friend void tag_invoke(hpx::for_loop_strided_t,
-            typename std::decay<I>::type first, I last, S stride,
-            Args&&... args)
+
+        friend void tag_fallback_dispatch(hpx::for_loop_strided_t,
+            std::decay_t<I> first, I last, S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_strided must be called with at least a function "
@@ -1310,8 +1426,9 @@ namespace hpx {
         }
     } for_loop_strided{};
 
+    ///////////////////////////////////////////////////////////////////////////
     HPX_INLINE_CONSTEXPR_VARIABLE struct for_loop_n_t final
-      : hpx::functional::tag<for_loop_n_t>
+      : hpx::functional::tag_fallback<for_loop_n_t>
     {
     private:
         // clang-format off
@@ -1325,8 +1442,8 @@ namespace hpx {
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy>::type
-        tag_invoke(hpx::for_loop_n_t, ExPolicy&& policy, I first, Size size,
-            Args&&... args)
+        tag_fallback_dispatch(hpx::for_loop_n_t, ExPolicy&& policy, I first,
+            Size size, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_n must be called with at least a function object");
@@ -1346,7 +1463,7 @@ namespace hpx {
                  std::is_integral<I>::value)
             )>
         // clang-format on
-        friend void tag_invoke(
+        friend void tag_fallback_dispatch(
             hpx::for_loop_n_t, I first, Size size, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
@@ -1359,8 +1476,9 @@ namespace hpx {
         }
     } for_loop_n{};
 
+    ///////////////////////////////////////////////////////////////////////////
     HPX_INLINE_CONSTEXPR_VARIABLE struct for_loop_n_strided_t final
-      : hpx::functional::tag<for_loop_n_strided_t>
+      : hpx::functional::tag_fallback<for_loop_n_strided_t>
     {
     private:
         // clang-format off
@@ -1375,8 +1493,8 @@ namespace hpx {
             )>
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy>::type
-        tag_invoke(hpx::for_loop_n_strided_t, ExPolicy&& policy, I first,
-            Size size, S stride, Args&&... args)
+        tag_fallback_dispatch(hpx::for_loop_n_strided_t, ExPolicy&& policy,
+            I first, Size size, S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_n_strided must be called with at least a function "
@@ -1398,8 +1516,8 @@ namespace hpx {
                  std::is_integral<I>::value)
             )>
         // clang-format on
-        friend void tag_invoke(hpx::for_loop_n_strided_t, I first, Size size,
-            S stride, Args&&... args)
+        friend void tag_fallback_dispatch(hpx::for_loop_n_strided_t, I first,
+            Size size, S stride, Args&&... args)
         {
             static_assert(sizeof...(Args) >= 1,
                 "for_loop_n_strided must be called with at least a function "
@@ -1420,12 +1538,11 @@ namespace hpx { namespace traits {
     struct get_function_address<
         parallel::v2::detail::part_iterations<F, S, Tuple>>
     {
-        static std::size_t call(
+        static constexpr std::size_t call(
             parallel::v2::detail::part_iterations<F, S, Tuple> const&
                 f) noexcept
         {
-            return get_function_address<typename std::decay<F>::type>::call(
-                f.f_);
+            return get_function_address<std::decay_t<F>>::call(f.f_);
         }
     };
 
@@ -1433,12 +1550,11 @@ namespace hpx { namespace traits {
     struct get_function_annotation<
         parallel::v2::detail::part_iterations<F, S, Tuple>>
     {
-        static char const* call(
+        static constexpr char const* call(
             parallel::v2::detail::part_iterations<F, S, Tuple> const&
                 f) noexcept
         {
-            return get_function_annotation<typename std::decay<F>::type>::call(
-                f.f_);
+            return get_function_annotation<std::decay_t<F>>::call(f.f_);
         }
     };
 
@@ -1451,8 +1567,7 @@ namespace hpx { namespace traits {
             parallel::v2::detail::part_iterations<F, S, Tuple> const&
                 f) noexcept
         {
-            return get_function_annotation_itt<
-                typename std::decay<F>::type>::call(f.f_);
+            return get_function_annotation_itt<std::decay_t<F>>::call(f.f_);
         }
     };
 #endif

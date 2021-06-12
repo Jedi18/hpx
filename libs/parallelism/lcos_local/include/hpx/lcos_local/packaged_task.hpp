@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2016 Hartmut Kaiser
+//  Copyright (c) 2007-2021 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -7,6 +7,7 @@
 #pragma once
 
 #include <hpx/config.hpp>
+#include <hpx/execution_base/detail/try_catch_exception_ptr.hpp>
 #include <hpx/functional/traits/is_invocable.hpp>
 #include <hpx/functional/unique_function.hpp>
 #include <hpx/futures/detail/future_data.hpp>
@@ -20,50 +21,46 @@
 #include <utility>
 
 namespace hpx { namespace lcos { namespace local {
+
     template <typename Sig>
     class packaged_task;
 
     template <typename R, typename... Ts>
     class packaged_task<R(Ts...)>
     {
-        typedef util::unique_function_nonser<R(Ts...)> function_type;
+        using function_type = util::unique_function_nonser<R(Ts...)>;
 
     public:
         // construction and destruction
-        packaged_task()
-          : function_()
-          , promise_()
-        {
-        }
+        packaged_task() = default;
 
-        template <typename F, typename FD = typename std::decay<F>::type,
-            typename Enable = typename std::enable_if<
-                !std::is_same<FD, packaged_task>::value &&
-                is_invocable_r_v<R, FD&, Ts...>>::type>
+        template <typename F, typename FD = std::decay_t<F>,
+            typename Enable =
+                std::enable_if_t<!std::is_same<FD, packaged_task>::value &&
+                    is_invocable_r_v<R, FD&, Ts...>>>
         explicit packaged_task(F&& f)
           : function_(std::forward<F>(f))
           , promise_()
         {
         }
 
-        template <typename Allocator, typename F,
-            typename FD = typename std::decay<F>::type,
-            typename Enable = typename std::enable_if<
-                !std::is_same<FD, packaged_task>::value &&
-                is_invocable_r_v<R, FD&, Ts...>>::type>
+        template <typename Allocator, typename F, typename FD = std::decay_t<F>,
+            typename Enable =
+                std::enable_if_t<!std::is_same<FD, packaged_task>::value &&
+                    is_invocable_r_v<R, FD&, Ts...>>>
         explicit packaged_task(std::allocator_arg_t, Allocator const& a, F&& f)
           : function_(std::forward<F>(f))
           , promise_(std::allocator_arg, a)
         {
         }
 
-        packaged_task(packaged_task&& rhs)
+        packaged_task(packaged_task&& rhs) noexcept
           : function_(std::move(rhs.function_))
           , promise_(std::move(rhs.promise_))
         {
         }
 
-        packaged_task& operator=(packaged_task&& rhs)
+        packaged_task& operator=(packaged_task&& rhs) noexcept
         {
             if (this != &rhs)
             {
@@ -134,46 +131,26 @@ namespace hpx { namespace lcos { namespace local {
         template <typename... Vs>
         void invoke_impl(/*is_void=*/std::false_type, Vs&&... vs)
         {
-            std::exception_ptr p;
-
-            try
-            {
-                promise_.set_value(function_(std::forward<Vs>(vs)...));
-                return;
-            }
-            catch (...)
-            {
-                p = std::current_exception();
-            }
-
-            // The exception is set outside the catch block since
-            // set_exception may yield. Ending the catch block on a
-            // different worker thread than where it was started may lead
-            // to segfaults.
-            promise_.set_exception(std::move(p));
+            hpx::detail::try_catch_exception_ptr(
+                [&]() {
+                    promise_.set_value(function_(std::forward<Vs>(vs)...));
+                },
+                [&](std::exception_ptr ep) {
+                    promise_.set_exception(std::move(ep));
+                });
         }
 
         template <typename... Vs>
         void invoke_impl(/*is_void=*/std::true_type, Vs&&... vs)
         {
-            std::exception_ptr p;
-
-            try
-            {
-                function_(std::forward<Ts>(vs)...);
-                promise_.set_value();
-                return;
-            }
-            catch (...)
-            {
-                p = std::current_exception();
-            }
-
-            // The exception is set outside the catch block since
-            // set_exception may yield. Ending the catch block on a
-            // different worker thread than where it was started may lead
-            // to segfaults.
-            promise_.set_exception(std::move(p));
+            hpx::detail::try_catch_exception_ptr(
+                [&]() {
+                    function_(std::forward<Ts>(vs)...);
+                    promise_.set_value();
+                },
+                [&](std::exception_ptr ep) {
+                    promise_.set_exception(std::move(ep));
+                });
         }
 
     private:

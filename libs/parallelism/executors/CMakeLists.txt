@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The STE||AR-Group
+# Copyright (c) 2020-2021 The STE||AR-Group
 #
 # SPDX-License-Identifier: BSL-1.0
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -17,6 +17,7 @@ set(executors_headers
     hpx/executors/dataflow.hpp
     hpx/executors/detail/hierarchical_spawning.hpp
     hpx/executors/exception_list.hpp
+    hpx/executors/execution_policy_annotation.hpp
     hpx/executors/execution_policy_fwd.hpp
     hpx/executors/execution_policy.hpp
     hpx/executors/fork_join_executor.hpp
@@ -29,7 +30,6 @@ set(executors_headers
     hpx/executors/service_executors.hpp
     hpx/executors/std_execution_policy.hpp
     hpx/executors/sync.hpp
-    hpx/executors/thread_pool_attached_executors.hpp
     hpx/executors/thread_pool_executor.hpp
 )
 
@@ -48,7 +48,6 @@ set(executors_compat_headers
     hpx/execution/executors/parallel_executor_aggregated.hpp => hpx/include/parallel_executors.hpp
     hpx/execution/executors/restricted_thread_pool_executor.hpp => hpx/include/parallel_executors.hpp
     hpx/execution/executors/sequenced_executor.hpp => hpx/include/parallel_executors.hpp
-    hpx/execution/executors/thread_pool_attached_executors.hpp => hpx/include/parallel_executors.hpp
     hpx/parallel/datapar/execution_policy_fwd.hpp => hpx/include/parallel_executors.hpp
     hpx/parallel/datapar/execution_policy.hpp => hpx/include/parallel_executors.hpp
     hpx/parallel/executors.hpp => hpx/include/parallel_executors.hpp
@@ -58,7 +57,6 @@ set(executors_compat_headers
     hpx/parallel/executors/parallel_executor.hpp => hpx/execution.hpp
     hpx/parallel/executors/parallel_executor_aggregated.hpp => hpx/include/parallel_executors.hpp
     hpx/parallel/executors/sequenced_executor.hpp => hpx/execution.hpp
-    hpx/parallel/executors/thread_pool_attached_executors.hpp => hpx/include/parallel_executors.hpp
     hpx/parallel/executors/thread_pool_executor.hpp => hpx/execution.hpp
 )
 # cmake-format: on

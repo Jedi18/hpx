@@ -4,16 +4,15 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/hpx.hpp>
-#include <hpx/hpx_init.hpp>
-
-#include <hpx/iostream.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/tuple.hpp>
 #include <hpx/modules/iterator_support.hpp>
 #include <hpx/modules/testing.hpp>
 #include <hpx/modules/timing.hpp>
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <type_traits>
@@ -504,11 +503,11 @@ int hpx_main(hpx::program_options::variables_map& vm)
     // verify that input is within domain of program
     if (test_count <= 0)
     {
-        hpx::cout << "test_count cannot be zero or negative..." << std::endl;
+        std::cout << "test_count cannot be zero or negative..." << std::endl;
     }
     else if (partition_size < 3)
     {
-        hpx::cout << "partition_size cannot be smaller than 3..." << std::endl;
+        std::cout << "partition_size cannot be smaller than 3..." << std::endl;
     }
     else
     {
@@ -517,7 +516,7 @@ int hpx_main(hpx::program_options::variables_map& vm)
             std::uint64_t t = 0;
             for (int i = 0; i != test_count; ++i)
                 t += bench_stencil3_iterator_full();
-            hpx::cout << "full: " << (t * 1e-9) / test_count << std::endl;
+            std::cout << "full: " << (t * 1e-9) / test_count << std::endl;
             hpx::util::print_cdash_timing(
                 "Stencil3Full", (t * 1e-9) / test_count);
         }
@@ -527,7 +526,7 @@ int hpx_main(hpx::program_options::variables_map& vm)
             std::uint64_t t = 0;
             for (int i = 0; i != test_count; ++i)
                 t += bench_stencil3_iterator_v1();
-            hpx::cout << "nocheck(v1): " << (t * 1e-9) / test_count
+            std::cout << "nocheck(v1): " << (t * 1e-9) / test_count
                       << std::endl;
             hpx::util::print_cdash_timing(
                 "Stencil3NocheckV1", (t * 1e-9) / test_count);
@@ -537,7 +536,7 @@ int hpx_main(hpx::program_options::variables_map& vm)
             std::uint64_t t = 0;
             for (int i = 0; i != test_count; ++i)
                 t += bench_stencil3_iterator_v2();
-            hpx::cout << "nocheck(v2): " << (t * 1e-9) / test_count
+            std::cout << "nocheck(v2): " << (t * 1e-9) / test_count
                       << std::endl;
             hpx::util::print_cdash_timing(
                 "Stencil3NocheckV2", (t * 1e-9) / test_count);
@@ -548,13 +547,13 @@ int hpx_main(hpx::program_options::variables_map& vm)
             std::uint64_t t = 0;
             for (int i = 0; i != test_count; ++i)
                 t += bench_stencil3_iterator_explicit();
-            hpx::cout << "explicit: " << (t * 1e-9) / test_count << std::endl;
+            std::cout << "explicit: " << (t * 1e-9) / test_count << std::endl;
             hpx::util::print_cdash_timing(
                 "Stencil3Explicit", (t * 1e-9) / test_count);
         }
     }
 
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -575,8 +574,8 @@ int main(int argc, char* argv[])
         ;
     // clang-format on
 
-    hpx::init_params init_args;
+    hpx::local::init_params init_args;
     init_args.desc_cmdline = cmdline;
 
-    return hpx::init(argc, argv, init_args);
+    return hpx::local::init(hpx_main, argc, argv, init_args);
 }

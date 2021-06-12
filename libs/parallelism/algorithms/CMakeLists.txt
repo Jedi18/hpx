@@ -99,6 +99,7 @@ set(algorithms_headers
     hpx/parallel/container_algorithms/is_heap.hpp
     hpx/parallel/container_algorithms/is_partitioned.hpp
     hpx/parallel/container_algorithms/is_sorted.hpp
+    hpx/parallel/container_algorithms/lexicographical_compare.hpp
     hpx/parallel/container_algorithms/make_heap.hpp
     hpx/parallel/container_algorithms/merge.hpp
     hpx/parallel/container_algorithms/minmax.hpp
@@ -133,6 +134,7 @@ set(algorithms_headers
     hpx/parallel/spmd_block.hpp
     hpx/parallel/tagspec.hpp
     hpx/parallel/task_block.hpp
+    hpx/parallel/task_group.hpp
     hpx/parallel/util/cancellation_token.hpp
     hpx/parallel/util/compare_projected.hpp
     hpx/parallel/util/detail/algorithm_result.hpp
@@ -156,6 +158,7 @@ set(algorithms_headers
     hpx/parallel/util/prefetching.hpp
     hpx/parallel/util/projection_identity.hpp
     hpx/parallel/util/range.hpp
+    hpx/parallel/util/ranges_facilities.hpp
     hpx/parallel/util/result_types.hpp
     hpx/parallel/util/scan_partitioner.hpp
     hpx/parallel/util/tagged_pair.hpp

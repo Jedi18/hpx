@@ -4,14 +4,12 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/hpx.hpp>
-#include <hpx/hpx_init.hpp>
-
-#include <hpx/include/parallel_task_block.hpp>
-#include <hpx/iostream.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/task_block.hpp>
 #include <hpx/modules/testing.hpp>
 #include <hpx/runtime_local/custom_exception_info.hpp>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -34,17 +32,17 @@ void define_task_block_test()
 
         trh.run([&]() {
             task1_flag = true;
-            hpx::cout << "task1: " << s << hpx::endl;
+            std::cout << "task1: " << s << std::endl;
         });
 
         trh.run([&]() {
             task2_flag = true;
-            hpx::cout << "task2" << hpx::endl;
+            std::cout << "task2" << std::endl;
 
             define_task_block([&](task_block<>& trh) {
                 trh.run([&]() {
                     task21_flag = true;
-                    hpx::cout << "task2.1" << hpx::endl;
+                    std::cout << "task2.1" << std::endl;
                 });
             });
         });
@@ -52,10 +50,10 @@ void define_task_block_test()
         int i = 0, j = 10, k = 20;
         trh.run([=, &task3_flag]() {
             task3_flag = true;
-            hpx::cout << "task3: " << i << " " << j << " " << k << hpx::endl;
+            std::cout << "task3: " << i << " " << j << " " << k << std::endl;
         });
 
-        hpx::cout << "parent" << hpx::endl;
+        std::cout << "parent" << std::endl;
     });
 
     HPX_TEST(parent_flag);
@@ -72,22 +70,22 @@ void define_task_block_exceptions_test1()
     {
         define_task_block([](task_block<>& trh) {
             trh.run([]() {
-                hpx::cout << "task1" << hpx::endl;
+                std::cout << "task1" << std::endl;
                 throw 1;
             });
 
             trh.run([]() {
-                hpx::cout << "task2" << hpx::endl;
+                std::cout << "task2" << std::endl;
                 throw 2;
             });
 
-            hpx::cout << "parent" << hpx::endl;
+            std::cout << "parent" << std::endl;
             throw 100;
         });
 
         HPX_TEST(false);
     }
-    catch (hpx::parallel::exception_list const& e)
+    catch (hpx::exception_list const& e)
     {
         HPX_TEST_EQ(e.size(), 3u);
     }
@@ -135,7 +133,7 @@ int hpx_main()
     define_task_block_exceptions_test1();
     define_task_block_exceptions_test2();
 
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 int main(int argc, char* argv[])
@@ -144,10 +142,10 @@ int main(int argc, char* argv[])
     std::vector<std::string> const cfg = {"hpx.os_threads=all"};
 
     // Initialize and run HPX
-    hpx::init_params init_args;
+    hpx::local::init_params init_args;
     init_args.cfg = cfg;
 
-    HPX_TEST_EQ_MSG(hpx::init(argc, argv, init_args), 0,
+    HPX_TEST_EQ_MSG(hpx::local::init(hpx_main, argc, argv, init_args), 0,
         "HPX main exited with non-zero status");
 
     return hpx::util::report_errors();

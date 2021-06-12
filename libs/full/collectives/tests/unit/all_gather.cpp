@@ -1,4 +1,4 @@
-//  Copyright (c) 2019 Hartmut Kaiser
+//  Copyright (c) 2019-2021 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -18,40 +18,23 @@
 #include <utility>
 #include <vector>
 
-constexpr char const* all_gather_basename = "/test/all_gather/";
+using namespace hpx::collectives;
+
 constexpr char const* all_gather_direct_basename = "/test/all_gather_direct/";
 
-int hpx_main()
+void test_one_shot_use()
 {
     std::uint32_t num_localities = hpx::get_num_localities(hpx::launch::sync);
-
-    // test functionality based on future<> of local result
-    for (int i = 0; i != 10; ++i)
-    {
-        hpx::future<std::uint32_t> value =
-            hpx::make_ready_future(hpx::get_locality_id());
-
-        hpx::future<std::vector<std::uint32_t>> overall_result =
-            hpx::all_gather(
-                all_gather_basename, std::move(value), num_localities, i);
-
-        std::vector<std::uint32_t> r = overall_result.get();
-        HPX_TEST_EQ(r.size(), num_localities);
-
-        for (std::size_t j = 0; j != r.size(); ++j)
-        {
-            HPX_TEST_EQ(r[j], j);
-        }
-    }
+    std::uint32_t here = hpx::get_locality_id();
 
     // test functionality based on immediate local result value
     for (int i = 0; i != 10; ++i)
     {
-        std::uint32_t value = hpx::get_locality_id();
+        std::uint32_t value = here;
 
-        hpx::future<std::vector<std::uint32_t>> overall_result =
-            hpx::all_gather(
-                all_gather_direct_basename, value, num_localities, i);
+        hpx::future<std::vector<std::uint32_t>> overall_result = all_gather(
+            all_gather_direct_basename, value, num_sites_arg(num_localities),
+            this_site_arg(here), generation_arg(i));
 
         std::vector<std::uint32_t> r = overall_result.get();
         HPX_TEST_EQ(r.size(), num_localities);
@@ -61,6 +44,39 @@ int hpx_main()
             HPX_TEST_EQ(r[j], j);
         }
     }
+}
+
+void test_multiple_use()
+{
+    std::uint32_t num_localities = hpx::get_num_localities(hpx::launch::sync);
+    std::uint32_t here = hpx::get_locality_id();
+
+    // test functionality based on immediate local result value
+    auto all_gather_direct_client =
+        create_communicator(all_gather_direct_basename,
+            num_sites_arg(num_localities), this_site_arg(here));
+
+    for (int i = 0; i != 10; ++i)
+    {
+        std::uint32_t value = here;
+
+        hpx::future<std::vector<std::uint32_t>> overall_result =
+            all_gather(all_gather_direct_client, value);
+
+        std::vector<std::uint32_t> r = overall_result.get();
+        HPX_TEST_EQ(r.size(), num_localities);
+
+        for (std::size_t j = 0; j != r.size(); ++j)
+        {
+            HPX_TEST_EQ(r[j], j);
+        }
+    }
+}
+
+int hpx_main()
+{
+    test_one_shot_use();
+    test_multiple_use();
 
     return hpx::finalize();
 }

@@ -116,18 +116,26 @@ function(add_hpx_config_test variable)
     )
     set(CONFIG_TEST_LINK_LIBRARIES ${_base_libraries} ${${variable}_LIBRARIES})
 
+    set(additional_cmake_flags)
+    if(MSVC)
+      set(additional_cmake_flags "-WX")
+    else()
+      set(additional_cmake_flags "-Werror")
+    endif()
+
     if(${variable}_EXECUTE)
       if(NOT CMAKE_CROSSCOMPILING)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${additional_cmake_flags}")
         # cmake-format: off
         try_run(
           ${variable}_RUN_RESULT ${variable}_COMPILE_RESULT
           ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config_tests
           ${test_source}
+          COMPILE_DEFINITIONS ${CONFIG_TEST_COMPILE_DEFINITIONS}
           CMAKE_FLAGS
             "-DINCLUDE_DIRECTORIES=${CONFIG_TEST_INCLUDE_DIRS}"
             "-DLINK_DIRECTORIES=${CONFIG_TEST_LINK_DIRS}"
             "-DLINK_LIBRARIES=${CONFIG_TEST_LINK_LIBRARIES}"
-            "-DCOMPILE_DEFINITIONS=${CONFIG_TEST_COMPILE_DEFINITIONS}"
           CXX_STANDARD ${HPX_CXX_STANDARD}
           CXX_STANDARD_REQUIRED ON
           CXX_EXTENSIONS FALSE
@@ -144,16 +152,17 @@ function(add_hpx_config_test variable)
         set(${variable}_RESULT FALSE)
       endif()
     else()
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${additional_cmake_flags}")
       # cmake-format: off
       try_compile(
         ${variable}_RESULT
         ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/config_tests
         ${test_source}
+        COMPILE_DEFINITIONS ${CONFIG_TEST_COMPILE_DEFINITIONS}
         CMAKE_FLAGS
           "-DINCLUDE_DIRECTORIES=${CONFIG_TEST_INCLUDE_DIRS}"
           "-DLINK_DIRECTORIES=${CONFIG_TEST_LINK_DIRS}"
           "-DLINK_LIBRARIES=${CONFIG_TEST_LINK_LIBRARIES}"
-          "-DCOMPILE_DEFINITIONS=${CONFIG_TEST_COMPILE_DEFINITIONS}"
         OUTPUT_VARIABLE ${variable}_OUTPUT
         CXX_STANDARD ${HPX_CXX_STANDARD}
         CXX_STANDARD_REQUIRED ON
@@ -257,8 +266,9 @@ function(hpx_check_for_cxx11_std_atomic)
         LIBRARIES ${HPX_CXX11_STD_ATOMIC_LIBRARIES}
         FILE ${ARGN}
       )
-      if(NOT HPX_WITH_CXX11_ATOMIC_128BIT)
-        unset(HPX_WITH_CXX11_ATOMIC_128BIT CACHE)
+      if(NOT HPX_WITH_CXX11_ATOMIC)
+        unset(HPX_CXX11_STD_ATOMIC_LIBRARIES CACHE)
+        unset(HPX_WITH_CXX11_ATOMIC CACHE)
       endif()
     endif()
   endif()
@@ -288,6 +298,8 @@ function(hpx_check_for_cxx11_std_atomic_128bit)
         FILE ${ARGN}
       )
       if(NOT HPX_WITH_CXX11_ATOMIC_128BIT)
+        # Adding -latomic did not help, so we don't attempt to link to it later
+        unset(HPX_CXX11_STD_ATOMIC_LIBRARIES CACHE)
         unset(HPX_WITH_CXX11_ATOMIC_128BIT CACHE)
       endif()
     endif()
@@ -510,10 +522,37 @@ function(hpx_check_for_cxx20_coroutines)
 endfunction()
 
 # ##############################################################################
+function(hpx_check_for_cxx20_lambda_capture)
+  add_hpx_config_test(
+    HPX_WITH_CXX20_LAMBDA_CAPTURE
+    SOURCE cmake/tests/cxx20_lambda_capture.cpp
+    FILE ${ARGN}
+  )
+endfunction()
+
+# ##############################################################################
+function(hpx_check_for_cxx20_experimental_simd)
+  add_hpx_config_test(
+    HPX_WITH_CXX20_EXPERIMENTAL_SIMD
+    SOURCE cmake/tests/cxx20_experimental_simd.cpp
+    FILE ${ARGN}
+  )
+endfunction()
+
+# ##############################################################################
 function(hpx_check_for_cxx20_no_unique_address_attribute)
   add_hpx_config_test(
     HPX_WITH_CXX20_NO_UNIQUE_ADDRESS_ATTRIBUTE
     SOURCE cmake/tests/cxx20_no_unique_address_attribute.cpp
+    FILE ${ARGN}
+  )
+endfunction()
+
+# ##############################################################################
+function(hpx_check_for_cxx20_paren_initialization_of_aggregates)
+  add_hpx_config_test(
+    HPX_WITH_CXX20_PAREN_INITIALIZATION_OF_AGGREGATES
+    SOURCE cmake/tests/cxx20_paren_initialization_of_aggregates.cpp
     FILE ${ARGN}
   )
 endfunction()

@@ -38,29 +38,27 @@ namespace hpx { namespace threads { namespace detail {
     inline void write_new_state_log_debug(std::size_t num_thread,
         thread_data* thrd, thread_schedule_state state, char const* info)
     {
-        LTM_(debug) << "tfunc(" << num_thread << "): "    //-V128
-                    << "thread(" << thrd->get_thread_id() << "), "
-                    << "description(" << thrd->get_description() << "), "
-                    << "new state(" << get_thread_state_name(state) << "), "
-                    << info;
+        LTM_(debug).format(
+            "tfunc({}): thread({}), description({}), new state({}), {}",
+            num_thread, thrd->get_thread_id(), thrd->get_description(),
+            get_thread_state_name(state), info);
     }
     inline void write_new_state_log_warning(std::size_t num_thread,
         thread_data* thrd, thread_schedule_state state, char const* info)
     {
         // log this in any case
-        LTM_(warning) << "tfunc(" << num_thread << "): "    //-V128
-                      << "thread(" << thrd->get_thread_id() << "), "
-                      << "description(" << thrd->get_description() << "), "
-                      << "new state(" << get_thread_state_name(state) << "), "
-                      << info;
+        LTM_(warning).format(
+            "tfunc({}): thread({}), description({}), new state({}), {}",
+            num_thread, thrd->get_thread_id(), thrd->get_description(),
+            get_thread_state_name(state), info);
     }
     inline void write_old_state_log(
         std::size_t num_thread, thread_data* thrd, thread_schedule_state state)
     {
-        LTM_(debug) << "tfunc(" << num_thread << "): "    //-V128
-                    << "thread(" << thrd->get_thread_id() << "), "
-                    << "description(" << thrd->get_description() << "), "
-                    << "old state(" << get_thread_state_name(state) << ")";
+        LTM_(debug).format(
+            "tfunc({}): thread({}), description({}), old state({})", num_thread,
+            thrd->get_thread_id(), thrd->get_description(),
+            get_thread_state_name(state));
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -590,7 +588,6 @@ namespace hpx { namespace threads { namespace detail {
         // spin for some time after queues have become empty
         bool may_exit = false;
 
-#if defined(HPX_HAVE_NETWORKING)
         std::shared_ptr<bool> background_running = nullptr;
         thread_id_type background_thread;
 
@@ -604,7 +601,6 @@ namespace hpx { namespace threads { namespace detail {
                     thread_schedule_hint(static_cast<std::int16_t>(num_thread)),
                     idle_loop_count);
         }
-#endif
 
         hpx::execution_base::this_thread::detail::agent_storage*
             context_storage =
@@ -828,16 +824,10 @@ namespace hpx { namespace threads { namespace detail {
                 else if (HPX_UNLIKELY(
                              thread_schedule_state::active == state_val))
                 {
-                    LTM_(warning) << "tfunc(" << num_thread
-                                  << "): "    //-V128
-                                     "thread("
-                                  << thrd->get_thread_id()
-                                  << "), "
-                                     "description("
-                                  << thrd->get_description()
-                                  << "), "
-                                     "rescheduling";
-
+                    LTM_(warning).format(
+                        "tfunc({}): thread({}), description({}), rescheduling",
+                        num_thread, thrd->get_thread_id(),
+                        thrd->get_description());
                     // re-schedule thread, if it is still marked as active
                     // this might happen, if some thread has been added to the
                     // scheduler queue already but the state has not been reset
@@ -898,7 +888,6 @@ namespace hpx { namespace threads { namespace detail {
                                     policies::delay_exit))
                             {
                                 // If this is an inner scheduler, try to exit immediately
-#if defined(HPX_HAVE_NETWORKING)
                                 if (background_thread != nullptr)
                                 {
                                     HPX_ASSERT(background_running);
@@ -920,7 +909,6 @@ namespace hpx { namespace threads { namespace detail {
                                     background_running.reset();
                                 }
                                 else
-#endif
                                 {
                                     this_state.store(state_stopped);
                                     break;
@@ -946,7 +934,6 @@ namespace hpx { namespace threads { namespace detail {
                     added = std::size_t(-1);
                 }
 
-#if defined(HPX_HAVE_NETWORKING)
 #if defined(HPX_HAVE_BACKGROUND_THREAD_COUNTERS) &&                            \
     defined(HPX_HAVE_THREAD_IDLE_RATES)
                 // do background work in parcel layer and in agas
@@ -975,7 +962,6 @@ namespace hpx { namespace threads { namespace detail {
                             static_cast<std::int16_t>(num_thread)),
                         idle_loop_count);
                 }
-#endif
                 // call back into invoking context
                 if (!params.inner_.empty())
                 {
@@ -985,7 +971,11 @@ namespace hpx { namespace threads { namespace detail {
                 }
             }
 
-            scheduler.custom_polling_function();
+            if (scheduler.custom_polling_function() ==
+                policies::detail::polling_status::busy)
+            {
+                idle_loop_count = params.max_idle_loop_count_;
+            }
 
             // something went badly wrong, give up
             if (HPX_UNLIKELY(this_state.load() == state_terminating))
@@ -995,7 +985,6 @@ namespace hpx { namespace threads { namespace detail {
             {
                 busy_loop_count = 0;
 
-#if defined(HPX_HAVE_NETWORKING)
 #if defined(HPX_HAVE_BACKGROUND_THREAD_COUNTERS) &&                            \
     defined(HPX_HAVE_THREAD_IDLE_RATES)
                 // do background work in parcel layer and in agas
@@ -1025,7 +1014,6 @@ namespace hpx { namespace threads { namespace detail {
                             static_cast<std::int16_t>(num_thread)),
                         idle_loop_count);
                 }
-#endif
             }
             else if (idle_loop_count < 0 || may_exit)
             {
@@ -1045,7 +1033,6 @@ namespace hpx { namespace threads { namespace detail {
                 {
                     HPX_ASSERT(this_state.load() != state_pre_sleep);
 
-#if defined(HPX_HAVE_NETWORKING)
                     if (background_thread)
                     {
                         HPX_ASSERT(background_running);
@@ -1064,7 +1051,6 @@ namespace hpx { namespace threads { namespace detail {
                         background_running.reset();
                     }
                     else
-#endif
                     {
                         bool can_exit = !running &&
                             scheduler.SchedulingPolicy::cleanup_terminated(

@@ -58,7 +58,7 @@ Functions
 - :cpp:func:`hpx::is_partitioned`
 - :cpp:func:`hpx::is_sorted`
 - :cpp:func:`hpx::is_sorted_until`
-- :cpp:func:`hpx::parallel::v1::lexicographical_compare`
+- :cpp:func:`hpx::lexicographical_compare`
 - :cpp:func:`hpx::make_heap`
 - :cpp:func:`hpx::max_element`
 - :cpp:func:`hpx::merge`
@@ -78,8 +78,8 @@ Functions
 - :cpp:func:`hpx::replace_copy`
 - :cpp:func:`hpx::replace_copy_if`
 - :cpp:func:`hpx::replace_if`
-- :cpp:func:`hpx::parallel::v1::reverse`
-- :cpp:func:`hpx::parallel::v1::reverse_copy`
+- :cpp:func:`hpx::reverse`
+- :cpp:func:`hpx::reverse_copy`
 - :cpp:func:`hpx::parallel::v1::rotate`
 - :cpp:func:`hpx::parallel::v1::rotate_copy`
 - :cpp:func:`hpx::search`

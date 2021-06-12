@@ -4,21 +4,20 @@
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-source $SPACK_ROOT/share/spack/setup-env.sh
-
 export CRAYPE_LINK_TYPE=dynamic
 
 module load daint-mc
 module switch PrgEnv-cray PrgEnv-intel
-module load Boost/1.75.0-CrayIntel-20.08
+module load Boost/1.75.0-CrayIntel-20.11
 module load hwloc/.2.0.3
-spack load cmake
-spack load ninja
+spack load cmake@3.17.3
+spack load ninja@1.10.0
 
 export CXX=`which CC`
 export CC=`which cc`
 
 configure_extra_options="-DCMAKE_BUILD_TYPE=Debug"
+configure_extra_options+=" -DHPX_WITH_NETWORKING=OFF"
 configure_extra_options+=" -DHPX_WITH_MAX_CPU_COUNT=128"
 configure_extra_options+=" -DHPX_WITH_MALLOC=system"
 configure_extra_options+=" -DHPX_WITH_COMPILER_WARNINGS=ON"

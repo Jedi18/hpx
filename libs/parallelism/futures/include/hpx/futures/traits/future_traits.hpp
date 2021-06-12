@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2017 Hartmut Kaiser
+//  Copyright (c) 2007-2021 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -50,23 +50,26 @@ namespace hpx { namespace traits {
     template <typename R>
     struct future_traits<lcos::future<R>>
     {
-        typedef R type;
-        typedef R result_type;
+        using type = R;
+        using result_type = R;
     };
 
     template <typename R>
     struct future_traits<lcos::shared_future<R>>
     {
-        typedef R type;
-        typedef R const& result_type;
+        using type = R;
+        using result_type = R const&;
     };
 
     template <>
     struct future_traits<lcos::shared_future<void>>
     {
-        typedef void type;
-        typedef void result_type;
+        using type = void;
+        using result_type = void;
     };
+
+    template <typename Future>
+    using future_traits_t = typename future_traits<Future>::type;
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Future, typename Enable = void>
@@ -75,9 +78,8 @@ namespace hpx { namespace traits {
     };
 
     template <typename Future>
-    struct is_future_void<Future,
-        typename std::enable_if<is_future<Future>::value>::type>
-      : std::is_void<typename future_traits<Future>::type>
+    struct is_future_void<Future, std::enable_if_t<is_future_v<Future>>>
+      : std::is_void<future_traits_t<Future>>
     {
     };
 }}    // namespace hpx::traits

@@ -4,14 +4,15 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/future.hpp>
-#include <hpx/init.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/local/init.hpp>
 #include <hpx/modules/testing.hpp>
 #include <hpx/thread.hpp>
 
 #include <array>
 #include <chrono>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -89,6 +90,29 @@ void test_split_future3()
     HPX_TEST_EQ(hpx::get<1>(result).get(), 43);
     HPX_TEST_EQ(hpx::get<2>(result).get(), 44);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+#if defined(HPX_DATASTRUCTURES_HAVE_ADAPT_STD_TUPLE)
+std::tuple<int, int, int> make_std_tuple_slowly()
+{
+    hpx::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return std::make_tuple(42, 43, 44);
+}
+
+void test_split_std_future()
+{
+    hpx::lcos::local::futures_factory<std::tuple<int, int, int>()> pt(
+        make_std_tuple_slowly);
+    pt.apply();
+
+    std::tuple<hpx::future<int>, hpx::future<int>, hpx::future<int>> result =
+        hpx::split_future(pt.get_future());
+
+    HPX_TEST_EQ(std::get<0>(result).get(), 42);
+    HPX_TEST_EQ(std::get<1>(result).get(), 43);
+    HPX_TEST_EQ(std::get<2>(result).get(), 44);
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 std::pair<int, int> make_pair_slowly()
@@ -178,6 +202,10 @@ int hpx_main()
     test_split_future2();
     test_split_future3();
 
+#if defined(HPX_DATASTRUCTURES_HAVE_ADAPT_STD_TUPLE)
+    test_split_std_future();
+#endif
+
     test_split_future_pair();
 
     test_split_future_array0();
@@ -185,7 +213,7 @@ int hpx_main()
 
     test_split_future_vector();
 
-    hpx::finalize();
+    hpx::local::finalize();
     return hpx::util::report_errors();
 }
 
@@ -195,8 +223,8 @@ int main(int argc, char* argv[])
     std::vector<std::string> const cfg = {"hpx.os_threads=all"};
 
     // Initialize and run HPX
-    hpx::init_params init_args;
+    hpx::local::init_params init_args;
     init_args.cfg = cfg;
 
-    return hpx::init(argc, argv, init_args);
+    return hpx::local::init(hpx_main, argc, argv, init_args);
 }

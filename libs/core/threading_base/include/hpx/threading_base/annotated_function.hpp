@@ -1,4 +1,4 @@
-//  Copyright (c) 2017 Hartmut Kaiser
+//  Copyright (c) 2017-2021 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -37,9 +37,10 @@ namespace hpx { namespace util {
     {
         HPX_NON_COPYABLE(annotate_function);
 
-        explicit annotate_function(char const*) {}
+        explicit constexpr annotate_function(char const*) noexcept {}
+
         template <typename F>
-        explicit HPX_HOST_DEVICE annotate_function(F&&)
+        explicit HPX_HOST_DEVICE constexpr annotate_function(F&&) noexcept
         {
         }
 
@@ -139,6 +140,7 @@ namespace hpx { namespace util {
                 Ts...>::type
             operator()(Ts&&... ts)
             {
+                annotate_function annotate(get_function_annotation());
                 return HPX_INVOKE(f_, std::forward<Ts>(ts)...);
             }
 
@@ -155,8 +157,7 @@ namespace hpx { namespace util {
             ///
             /// This function returns the passed function address.
             /// \param none
-
-            std::size_t get_function_address() const
+            constexpr std::size_t get_function_address() const
             {
                 return traits::get_function_address<
                     typename util::decay_unwrap<F>::type>::call(f_);
@@ -170,7 +171,7 @@ namespace hpx { namespace util {
             /// is returned
             ///
             /// \param none
-            char const* get_function_annotation() const noexcept
+            constexpr char const* get_function_annotation() const noexcept
             {
                 return name_ ? name_ : typeid(f_).name();
             }
@@ -214,15 +215,22 @@ namespace hpx { namespace util {
     {
         HPX_NON_COPYABLE(annotate_function);
 
-        explicit annotate_function(char const* /*name*/) {}
+        explicit constexpr annotate_function(char const* /*name*/) noexcept {}
+
         template <typename F>
-        explicit HPX_HOST_DEVICE annotate_function(F&& /*f*/)
+        explicit HPX_HOST_DEVICE constexpr annotate_function(F&& /*f*/) noexcept
         {
         }
 
         // add empty (but non-trivial) destructor to silence warnings
         HPX_HOST_DEVICE ~annotate_function() {}
     };
+
+    namespace detail {
+
+        HPX_CORE_EXPORT char const* store_function_annotation(
+            std::string&& name);
+    }    // namespace detail
 
     ///////////////////////////////////////////////////////////////////////////
     /// \brief Given a function as an argument, the user can annotate_function
@@ -231,13 +239,13 @@ namespace hpx { namespace util {
     ///
     /// \param function
     template <typename F>
-    F&& annotated_function(F&& f, char const* = nullptr)
+    constexpr F&& annotated_function(F&& f, char const* = nullptr) noexcept
     {
         return std::forward<F>(f);
     }
 
     template <typename F>
-    F&& annotated_function(F&& f, std::string const&)
+    constexpr F&& annotated_function(F&& f, std::string const&) noexcept
     {
         return std::forward<F>(f);
     }
@@ -249,7 +257,7 @@ namespace hpx { namespace traits {
     template <typename F>
     struct get_function_address<util::detail::annotated_function<F>>
     {
-        static std::size_t call(
+        static constexpr std::size_t call(
             util::detail::annotated_function<F> const& f) noexcept
         {
             return f.get_function_address();
@@ -259,7 +267,7 @@ namespace hpx { namespace traits {
     template <typename F>
     struct get_function_annotation<util::detail::annotated_function<F>>
     {
-        static char const* call(
+        static constexpr char const* call(
             util::detail::annotated_function<F> const& f) noexcept
         {
             return f.get_function_annotation();

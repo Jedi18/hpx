@@ -31,8 +31,8 @@ namespace hpx { namespace lcos { namespace local { namespace detail {
     {
         if (!queue_.empty())
         {
-            LERR_(fatal) << "~condition_variable: queue is not empty, "
-                            "aborting threads";
+            LERR_(fatal).format(
+                "~condition_variable: queue is not empty, aborting threads");
 
             local::no_mutex no_mtx;
             std::unique_lock<local::no_mutex> lock(no_mtx);
@@ -131,29 +131,9 @@ namespace hpx { namespace lcos { namespace local { namespace detail {
                     return;
                 }
 
-                error_code local_ec;
-                {
-                    util::ignore_while_checking<std::unique_lock<mutex_type>>
-                        il(&lock);
-                    ctx.resume();
-                }
-
-                if (local_ec)
-                {
-                    prepend_entries(lock, queue);
-                    lock.unlock();
-
-                    if (&ec != &throws)
-                    {
-                        ec = std::move(local_ec);
-                    }
-                    else
-                    {
-                        std::rethrow_exception(
-                            hpx::detail::access_exception(local_ec));
-                    }
-                    return;
-                }
+                util::ignore_while_checking<std::unique_lock<mutex_type>> il(
+                    &lock);
+                ctx.resume();
 
             } while (!queue.empty());
         }
@@ -238,13 +218,13 @@ namespace hpx { namespace lcos { namespace local { namespace detail {
 
                 if (HPX_UNLIKELY(!ctx))
                 {
-                    LERR_(fatal) << "condition_variable::abort_all:"
-                                 << " null thread id encountered";
+                    LERR_(fatal).format("condition_variable::abort_all: null "
+                                        "thread id encountered");
                     continue;
                 }
 
-                LERR_(fatal) << "condition_variable::abort_all:"
-                             << " pending thread: " << ctx;
+                LERR_(fatal).format(
+                    "condition_variable::abort_all: pending thread: {}", ctx);
 
                 // unlock while notifying thread as this can suspend
                 util::unlock_guard<std::unique_lock<Mutex>> unlock(lock);

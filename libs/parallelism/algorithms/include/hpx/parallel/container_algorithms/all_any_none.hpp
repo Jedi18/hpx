@@ -222,7 +222,7 @@ namespace hpx { namespace ranges {
 
 #include <hpx/config.hpp>
 #include <hpx/concepts/concepts.hpp>
-#include <hpx/functional/tag_fallback_invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/iterator_support/range.hpp>
 #include <hpx/iterator_support/traits/is_range.hpp>
 
@@ -256,6 +256,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
         typename util::detail::algorithm_result<ExPolicy, bool>::type
         none_of(ExPolicy&& policy, Rng&& rng, F&& f, Proj&& proj = Proj())
     {
+
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
         using iterator_type = typename hpx::traits::range_iterator<Rng>::type;
 
         static_assert(hpx::traits::is_forward_iterator<iterator_type>::value,
@@ -263,6 +268,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
         return none_of(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
             hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic pop
+#endif
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -285,6 +293,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         typename util::detail::algorithm_result<ExPolicy, bool>::type
         any_of(ExPolicy&& policy, Rng&& rng, F&& f, Proj&& proj = Proj())
     {
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
         using iterator_type = typename hpx::traits::range_iterator<Rng>::type;
 
         static_assert(hpx::traits::is_forward_iterator<iterator_type>::value,
@@ -292,6 +304,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
         return any_of(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
             hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic pop
+#endif
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -314,6 +329,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
         typename util::detail::algorithm_result<ExPolicy, bool>::type
         all_of(ExPolicy&& policy, Rng&& rng, F&& f, Proj&& proj = Proj())
     {
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
         using iterator_type = typename hpx::traits::range_iterator<Rng>::type;
 
         static_assert(hpx::traits::is_forward_iterator<iterator_type>::value,
@@ -321,6 +340,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
         return all_of(std::forward<ExPolicy>(policy), hpx::util::begin(rng),
             hpx::util::end(rng), std::forward<F>(f), std::forward<Proj>(proj));
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic pop
+#endif
     }
 
 }}}    // namespace hpx::parallel::v1
@@ -328,7 +350,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
 namespace hpx { namespace ranges {
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::ranges::none_of
+    // DPO for hpx::ranges::none_of
     HPX_INLINE_CONSTEXPR_VARIABLE struct none_of_t final
       : hpx::functional::tag_fallback<none_of_t>
     {
@@ -347,7 +369,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(none_of_t, ExPolicy&& policy, Rng&& rng, F&& f,
+        tag_fallback_dispatch(none_of_t, ExPolicy&& policy, Rng&& rng, F&& f,
             Proj&& proj = Proj())
         {
             using iterator_type =
@@ -378,8 +400,8 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(none_of_t, ExPolicy&& policy, Iter first, Sent last,
-            F&& f, Proj&& proj = Proj())
+        tag_fallback_dispatch(none_of_t, ExPolicy&& policy, Iter first,
+            Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<Iter>::value,
                 "Required at least forward iterator.");
@@ -401,7 +423,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             none_of_t, Rng&& rng, F&& f, Proj&& proj = Proj())
         {
             using iterator_type =
@@ -428,7 +450,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             none_of_t, Iter first, Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_input_iterator<Iter>::value,
@@ -441,7 +463,7 @@ namespace hpx { namespace ranges {
     } none_of{};
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::ranges::any_of
+    // DPO for hpx::ranges::any_of
     HPX_INLINE_CONSTEXPR_VARIABLE struct any_of_t final
       : hpx::functional::tag_fallback<any_of_t>
     {
@@ -460,7 +482,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(
+        tag_fallback_dispatch(
             any_of_t, ExPolicy&& policy, Rng&& rng, F&& f, Proj&& proj = Proj())
         {
             using iterator_type =
@@ -491,8 +513,8 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(any_of_t, ExPolicy&& policy, Iter first, Sent last,
-            F&& f, Proj&& proj = Proj())
+        tag_fallback_dispatch(any_of_t, ExPolicy&& policy, Iter first,
+            Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<Iter>::value,
                 "Required at least forward iterator.");
@@ -514,7 +536,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             any_of_t, Rng&& rng, F&& f, Proj&& proj = Proj())
         {
             using iterator_type =
@@ -541,7 +563,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             any_of_t, Iter first, Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_input_iterator<Iter>::value,
@@ -553,7 +575,7 @@ namespace hpx { namespace ranges {
     } any_of{};
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::ranges::all_of
+    // DPO for hpx::ranges::all_of
     HPX_INLINE_CONSTEXPR_VARIABLE struct all_of_t final
       : hpx::functional::tag_fallback<all_of_t>
     {
@@ -572,7 +594,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(
+        tag_fallback_dispatch(
             all_of_t, ExPolicy&& policy, Rng&& rng, F&& f, Proj&& proj = Proj())
         {
             using iterator_type =
@@ -603,8 +625,8 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
             bool>::type
-        tag_fallback_invoke(all_of_t, ExPolicy&& policy, Iter first, Sent last,
-            F&& f, Proj&& proj = Proj())
+        tag_fallback_dispatch(all_of_t, ExPolicy&& policy, Iter first,
+            Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<Iter>::value,
                 "Required at least forward iterator.");
@@ -626,7 +648,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             all_of_t, Rng&& rng, F&& f, Proj&& proj = Proj())
         {
             using iterator_type =
@@ -653,7 +675,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend bool tag_fallback_invoke(
+        friend bool tag_fallback_dispatch(
             all_of_t, Iter first, Sent last, F&& f, Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_input_iterator<Iter>::value,

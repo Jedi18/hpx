@@ -4,11 +4,11 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/execution.hpp>
-#include <hpx/future.hpp>
-#include <hpx/init.hpp>
+#include <hpx/local/execution.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/runtime.hpp>
 #include <hpx/modules/testing.hpp>
-#include <hpx/runtime.hpp>
 
 #include <algorithm>
 #include <cstdlib>
@@ -159,15 +159,6 @@ int hpx_main()
     }
 #endif
 
-#if defined(HPX_HAVE_NETWORKING)
-    if (hpx::is_networking_enabled())
-    {
-        execution::service_executor exec(
-            service_executor_type::parcel_thread_pool);
-        test_service_executor(exec);
-    }
-#endif
-
 #if defined(HPX_HAVE_TIMER_POOL)
     {
         execution::service_executor exec(
@@ -181,14 +172,13 @@ int hpx_main()
         test_service_executor(exec);
     }
 
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 int main(int argc, char* argv[])
 {
-    // Initialize and run HPX
-    HPX_TEST_EQ_MSG(
-        hpx::init(argc, argv), 0, "HPX main exited with non-zero status");
+    HPX_TEST_EQ_MSG(hpx::local::init(hpx_main, argc, argv), 0,
+        "HPX main exited with non-zero status");
 
     return hpx::util::report_errors();
 }

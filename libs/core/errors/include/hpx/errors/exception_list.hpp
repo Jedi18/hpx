@@ -33,22 +33,27 @@ namespace hpx {
     class HPX_CORE_EXPORT exception_list : public hpx::exception
     {
     private:
+        /// \cond NOINTERNAL
+
         // TODO: Does this need to be hpx::lcos::local::spinlock?
         // typedef hpx::lcos::local::spinlock mutex_type;
-        // TODO: Add correct initialization of boost spinlock.
-        typedef hpx::util::detail::spinlock mutex_type;
+        // TODO: Add correct initialization of hpx::util::detail spinlock.
+        using mutex_type = hpx::util::detail::spinlock;
 
-        typedef std::list<std::exception_ptr> exception_list_type;
+        using exception_list_type = std::list<std::exception_ptr>;
         exception_list_type exceptions_;
         mutable mutex_type mtx_;
 
+        void add_no_lock(std::exception_ptr const& e);
+        /// \endcond
+
     public:
         /// bidirectional iterator
-        typedef exception_list_type::const_iterator iterator;
+        using iterator = exception_list_type::const_iterator;
 
         /// \cond NOINTERNAL
         // \throws nothing
-        ~exception_list() noexcept {}
+        ~exception_list() noexcept = default;
 
         exception_list();
         explicit exception_list(std::exception_ptr const& e);

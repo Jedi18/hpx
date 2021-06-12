@@ -211,6 +211,7 @@ namespace hpx {
 #include <hpx/config.hpp>
 #include <hpx/concepts/concepts.hpp>
 #include <hpx/functional/invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/parallel/util/tagged_pair.hpp>
 #include <hpx/type_support/unused.hpp>
@@ -318,8 +319,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                               zip_iterator part_begin,
                               std::size_t part_size) -> std::size_t {
                     // MSVC complains if pred or proj is captured by ref below
-                    util::loop_n<ExPolicy>(part_begin, part_size,
-                        [pred, proj](zip_iterator it) mutable {
+                    util::detail::loop_n<std::decay_t<ExPolicy>>(part_begin,
+                        part_size, [pred, proj](zip_iterator it) mutable {
                             bool f = hpx::util::invoke(
                                 pred, hpx::util::invoke(proj, get<0>(*it)));
 
@@ -354,10 +355,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
                     Iter& dest = *dest_ptr;
 
+                    using execution_policy_type = std::decay_t<ExPolicy>;
                     if (dest == get<0>(part_begin.get_iterator_tuple()))
                     {
                         // Self-assignment must be detected.
-                        util::loop_n<ExPolicy>(
+                        util::detail::loop_n<execution_policy_type>(
                             part_begin, part_size, [&dest](zip_iterator it) {
                                 if (!get<1>(*it))
                                 {
@@ -371,7 +373,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     else
                     {
                         // Self-assignment can't be performed.
-                        util::loop_n<ExPolicy>(
+                        util::detail::loop_n<execution_policy_type>(
                             part_begin, part_size, [&dest](zip_iterator it) {
                                 if (!get<1>(*it))
                                     *dest++ = std::move(get<0>(*it));
@@ -443,21 +445,29 @@ namespace hpx { namespace parallel { inline namespace v1 {
         remove(ExPolicy&& policy, FwdIter first, FwdIter last, T const& value,
             Proj&& proj = Proj())
     {
-        typedef typename std::iterator_traits<FwdIter>::value_type Type;
+
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+        using value_type = typename std::iterator_traits<FwdIter>::value_type;
 
         // Just utilize existing parallel remove_if.
         return detail::remove_if<FwdIter>().call(
             std::forward<ExPolicy>(policy), first, last,
-            [value](Type const& a) -> bool { return value == a; },
+            [value](value_type const& a) -> bool { return value == a; },
             std::forward<Proj>(proj));
+#if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
+#pragma GCC diagnostic pop
+#endif
     }
 }}}    // namespace hpx::parallel::v1
 
 namespace hpx {
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::remove_if
+    // DPO for hpx::remove_if
     HPX_INLINE_CONSTEXPR_VARIABLE struct remove_if_t final
-      : hpx::functional::tag<remove_if_t>
+      : hpx::functional::tag_fallback<remove_if_t>
     {
         // clang-format off
         template <typename FwdIter,
@@ -468,7 +478,7 @@ namespace hpx {
                 >
             )>
         // clang-format on
-        friend FwdIter tag_invoke(
+        friend FwdIter tag_dispatch(
             hpx::remove_if_t, FwdIter first, FwdIter last, Pred&& pred)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -492,7 +502,7 @@ namespace hpx {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_invoke(hpx::remove_if_t, ExPolicy&& policy, FwdIter first,
+        tag_dispatch(hpx::remove_if_t, ExPolicy&& policy, FwdIter first,
             FwdIter last, Pred&& pred)
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -507,9 +517,9 @@ namespace hpx {
     } remove_if{};
 
     ///////////////////////////////////////////////////////////////////////////
-    // CPO for hpx::remove
+    // DPO for hpx::remove
     HPX_INLINE_CONSTEXPR_VARIABLE struct remove_t final
-      : hpx::functional::tag<remove_t>
+      : hpx::functional::tag_fallback<remove_t>
     {
     private:
         // clang-format off
@@ -518,7 +528,7 @@ namespace hpx {
                 hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend FwdIter tag_invoke(
+        friend FwdIter tag_dispatch(
             hpx::remove_t, FwdIter first, FwdIter last, T const& value)
         {
             typedef typename std::iterator_traits<FwdIter>::value_type Type;
@@ -536,7 +546,7 @@ namespace hpx {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_invoke(hpx::remove_t, ExPolicy&& policy, FwdIter first,
+        tag_dispatch(hpx::remove_t, ExPolicy&& policy, FwdIter first,
             FwdIter last, T const& value)
         {
             typedef typename std::iterator_traits<FwdIter>::value_type Type;

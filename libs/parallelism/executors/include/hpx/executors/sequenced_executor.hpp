@@ -13,7 +13,7 @@
 #include <hpx/execution/detail/async_launch_policy_dispatch.hpp>
 #include <hpx/execution/detail/sync_launch_policy_dispatch.hpp>
 #include <hpx/execution/executors/execution.hpp>
-#include <hpx/execution/traits/is_executor.hpp>
+#include <hpx/execution_base/traits/is_executor.hpp>
 #include <hpx/functional/deferred_call.hpp>
 #include <hpx/functional/invoke.hpp>
 #include <hpx/futures/future.hpp>
@@ -121,7 +121,8 @@ namespace hpx { namespace execution {
                 std::forward<F>(f), shape, std::forward<Ts>(ts)...));
         }
 
-        std::size_t processing_units_count()
+        template <typename Parameters>
+        std::size_t processing_units_count(Parameters&&) const
         {
             return 1;
         }

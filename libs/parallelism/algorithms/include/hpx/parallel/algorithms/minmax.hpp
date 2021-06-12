@@ -399,19 +399,22 @@ namespace hpx { namespace parallel { inline namespace v1 {
         /// \cond NOINTERNAL
         template <typename ExPolicy, typename FwdIter, typename F,
             typename Proj>
-        FwdIter sequential_min_element(ExPolicy&&, FwdIter it,
+        constexpr FwdIter sequential_min_element(ExPolicy&&, FwdIter it,
             std::size_t count, F const& f, Proj const& proj)
         {
             if (count == 0 || count == 1)
                 return it;
 
             FwdIter smallest = it;
-            util::loop_n<ExPolicy>(++it, count - 1,
-                [&f, &smallest, &proj](FwdIter const& curr) -> void {
-                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *curr),
-                            hpx::util::invoke(proj, *smallest)))
+
+            util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                [&f, &smallest, &proj, value = HPX_INVOKE(proj, *smallest)](
+                    FwdIter const& curr) mutable -> void {
+                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    if (HPX_INVOKE(f, curr_value, value))
                     {
                         smallest = curr;
+                        value = std::move(curr_value);
                     }
                 });
 
@@ -426,7 +429,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
             // generically from the segmented algorithms
             template <typename ExPolicy, typename FwdIter, typename F,
                 typename Proj>
-            static typename std::iterator_traits<FwdIter>::value_type
+            static constexpr typename std::iterator_traits<FwdIter>::value_type
             sequential_minmax_element_ind(ExPolicy&&, FwdIter it,
                 std::size_t count, F const& f, Proj const& proj)
             {
@@ -435,15 +438,16 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 if (count == 1)
                     return *it;
 
-                typename std::iterator_traits<FwdIter>::value_type smallest =
-                    *it;
-                util::loop_n<ExPolicy>(++it, count - 1,
-                    [&f, &smallest, &proj](FwdIter const& curr) -> void {
-                        if (hpx::util::invoke(f,
-                                hpx::util::invoke(proj, **curr),
-                                hpx::util::invoke(proj, *smallest)))
+                auto smallest = *it;
+
+                util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                    [&f, &smallest, &proj, value = HPX_INVOKE(proj, *smallest)](
+                        FwdIter const& curr) mutable -> void {
+                        auto curr_value = HPX_INVOKE(proj, **curr);
+                        if (HPX_INVOKE(f, curr_value, value))
                         {
                             smallest = *curr;
+                            value = std::move(curr_value);
                         }
                     });
 
@@ -544,19 +548,22 @@ namespace hpx { namespace parallel { inline namespace v1 {
         /// \cond NOINTERNAL
         template <typename ExPolicy, typename FwdIter, typename F,
             typename Proj>
-        FwdIter sequential_max_element(ExPolicy&&, FwdIter it,
+        constexpr FwdIter sequential_max_element(ExPolicy&&, FwdIter it,
             std::size_t count, F const& f, Proj const& proj)
         {
             if (count == 0 || count == 1)
                 return it;
 
             FwdIter greatest = it;
-            util::loop_n<ExPolicy>(++it, count - 1,
-                [&f, &greatest, &proj](FwdIter const& curr) -> void {
-                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *greatest),
-                            hpx::util::invoke(proj, *curr)))
+
+            util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                [&f, &greatest, &proj, value = HPX_INVOKE(proj, *greatest)](
+                    FwdIter const& curr) mutable -> void {
+                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    if (HPX_INVOKE(f, value, curr_value))
                     {
                         greatest = curr;
+                        value = std::move(curr_value);
                     }
                 });
 
@@ -571,7 +578,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
             // generically from the segmented algorithms
             template <typename ExPolicy, typename FwdIter, typename F,
                 typename Proj>
-            static typename std::iterator_traits<FwdIter>::value_type
+            static constexpr typename std::iterator_traits<FwdIter>::value_type
             sequential_minmax_element_ind(ExPolicy&&, FwdIter it,
                 std::size_t count, F const& f, Proj const& proj)
             {
@@ -580,15 +587,16 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 if (count == 1)
                     return *it;
 
-                typename std::iterator_traits<FwdIter>::value_type greatest =
-                    *it;
-                util::loop_n<ExPolicy>(++it, count - 1,
-                    [&f, &greatest, &proj](FwdIter const& curr) -> void {
-                        if (hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *greatest),
-                                hpx::util::invoke(proj, **curr)))
+                auto greatest = *it;
+
+                util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                    [&f, &greatest, &proj, value = HPX_INVOKE(proj, *greatest)](
+                        FwdIter const& curr) mutable -> void {
+                        auto curr_value = HPX_INVOKE(proj, **curr);
+                        if (HPX_INVOKE(f, value, curr_value))
                         {
                             greatest = *curr;
+                            value = std::move(curr_value);
                         }
                     });
 
@@ -697,18 +705,21 @@ namespace hpx { namespace parallel { inline namespace v1 {
             if (count == 0 || count == 1)
                 return result;
 
-            util::loop_n<ExPolicy>(++it, count - 1,
-                [&f, &result, &proj](FwdIter const& curr) -> void {
-                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *curr),
-                            hpx::util::invoke(proj, *result.min)))
+            auto value = HPX_INVOKE(proj, *it);
+            util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                [&f, &result, &proj, min_value = value, max_value = value](
+                    FwdIter const& curr) mutable -> void {
+                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    if (HPX_INVOKE(f, curr_value, min_value))
                     {
                         result.min = curr;
+                        min_value = curr_value;
                     }
 
-                    if (!hpx::util::invoke(f, hpx::util::invoke(proj, *curr),
-                            hpx::util::invoke(proj, *result.max)))
+                    if (!HPX_INVOKE(f, curr_value, max_value))
                     {
                         result.max = curr;
+                        max_value = std::move(curr_value);
                     }
                 });
 
@@ -733,22 +744,25 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 if (count == 1)
                     return *it;
 
-                typename std::iterator_traits<PairIter>::value_type result =
-                    *it;
-                util::loop_n<ExPolicy>(++it, count - 1,
-                    [&f, &result, &proj](PairIter const& curr) -> void {
-                        if (hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *curr->min),
-                                hpx::util::invoke(proj, *result.min)))
+                auto result = *it;
+
+                util::detail::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
+                    [&f, &result, &proj,
+                        min_value = HPX_INVOKE(proj, *result.min),
+                        max_value = HPX_INVOKE(proj, *result.max)](
+                        PairIter const& curr) mutable -> void {
+                        auto curr_min_value = HPX_INVOKE(proj, *curr->min);
+                        if (HPX_INVOKE(f, curr_min_value, min_value))
                         {
                             result.min = curr->min;
+                            min_value = std::move(curr_min_value);
                         }
 
-                        if (!hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *curr->max),
-                                hpx::util::invoke(proj, *result.max)))
+                        auto curr_max_value = HPX_INVOKE(proj, *curr->max);
+                        if (!HPX_INVOKE(f, curr_max_value, max_value))
                         {
                             result.max = curr->max;
+                            max_value = std::move(curr_max_value);
                         }
                     });
 

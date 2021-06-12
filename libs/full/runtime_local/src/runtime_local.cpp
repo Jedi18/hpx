@@ -29,7 +29,6 @@
 #include <hpx/runtime_local/thread_hooks.hpp>
 #include <hpx/runtime_local/thread_mapper.hpp>
 #include <hpx/static_reinit/static_reinit.hpp>
-#include <hpx/thread_executors/thread_executor.hpp>
 #include <hpx/thread_support/set_thread_name.hpp>
 #include <hpx/threading_base/external_timer.hpp>
 #include <hpx/threading_base/scheduler_mode.hpp>
@@ -261,7 +260,7 @@ namespace hpx {
     threads::policies::callback_notifier::on_error_type global_on_error_func;
 
     ///////////////////////////////////////////////////////////////////////////
-    runtime::runtime(util::runtime_configuration& rtcfg, bool initialize)
+    runtime::runtime(hpx::util::runtime_configuration& rtcfg, bool initialize)
       : rtcfg_(rtcfg)
       , instance_number_(++instance_number_counter_)
       , thread_support_(new util::thread_mapper)
@@ -309,23 +308,17 @@ namespace hpx {
         }
     }
 
-    runtime::runtime(util::runtime_configuration& rtcfg,
+    runtime::runtime(hpx::util::runtime_configuration& rtcfg,
         notification_policy_type&& notifier,
-        notification_policy_type&& main_pool_notifier
+        notification_policy_type&& main_pool_notifier,
 #ifdef HPX_HAVE_IO_POOL
-        ,
-        notification_policy_type&& io_pool_notifier
+        notification_policy_type&& io_pool_notifier,
 #endif
 #ifdef HPX_HAVE_TIMER_POOL
-        ,
-        notification_policy_type&& timer_pool_notifier
+        notification_policy_type&& timer_pool_notifier,
 #endif
-#ifdef HPX_HAVE_NETWORKING
-        ,
         threads::detail::network_background_callback_type
-            network_background_callback
-#endif
-        ,
+            network_background_callback,
         bool initialize)
       : rtcfg_(rtcfg)
       , instance_number_(++instance_number_counter_)
@@ -353,12 +346,7 @@ namespace hpx {
 #ifdef HPX_HAVE_TIMER_POOL
             timer_pool_,
 #endif
-            notifier_
-#ifdef HPX_HAVE_NETWORKING
-            ,
-            network_background_callback
-#endif
-            ))
+            notifier_, network_background_callback))
       , stop_called_(false)
       , stop_done_(false)
     {
@@ -432,14 +420,14 @@ namespace hpx {
 
     runtime::~runtime()
     {
-        LRT_(debug) << "~runtime_local(entering)";
+        LRT_(debug).format("~runtime_local(entering)");
 
         // stop all services
         thread_manager_->stop();    // stops timer_pool_ as well
 #ifdef HPX_HAVE_IO_POOL
         io_pool_.stop();
 #endif
-        LRT_(debug) << "~runtime_local(finished)";
+        LRT_(debug).format("~runtime_local(finished)");
 
         LPROGRESS_;
 
@@ -478,12 +466,12 @@ namespace hpx {
         return state_.load() == state_stopped;
     }
 
-    util::runtime_configuration& runtime::get_config()
+    hpx::util::runtime_configuration& runtime::get_config()
     {
         return rtcfg_;
     }
 
-    util::runtime_configuration const& runtime::get_config() const
+    hpx::util::runtime_configuration const& runtime::get_config() const
     {
         return rtcfg_;
     }
@@ -924,27 +912,6 @@ namespace hpx {
         return rt->get_config().get_os_thread_count();
     }
 
-#if defined(HPX_HAVE_THREAD_EXECUTORS_COMPATIBILITY)
-    std::size_t get_os_thread_count(threads::executor const& exec)
-    {
-        runtime* rt = get_runtime_ptr();
-        if (nullptr == rt)
-        {
-            HPX_THROW_EXCEPTION(invalid_status,
-                "hpx::get_os_thread_count(exec)",
-                "the runtime system has not been initialized yet");
-            return std::size_t(0);
-        }
-
-        if (!exec)
-            return rt->get_config().get_os_thread_count();
-
-        error_code ec(lightweight);
-        return exec.executor_data_->get_policy_element(
-            threads::detail::current_concurrency, ec);
-    }
-#endif
-
     bool is_scheduler_numa_sensitive()
     {
         runtime* rt = get_runtime_ptr();
@@ -1096,7 +1063,7 @@ namespace hpx {
         return runtime::get_system_uptime();
     }
 
-    util::runtime_configuration const& get_config()
+    hpx::util::runtime_configuration const& get_config()
     {
         return get_runtime().get_config();
     }
@@ -1113,16 +1080,12 @@ namespace hpx {
     /// Return true if networking is enabled.
     bool is_networking_enabled()
     {
-#if defined(HPX_HAVE_NETWORKING)
         runtime* rt = get_runtime_ptr();
         if (nullptr != rt)
         {
             return rt->is_networking_enabled();
         }
         return true;    // be on the safe side, enable networking
-#else
-        return false;
-#endif
     }
 }    // namespace hpx
 
@@ -1393,7 +1356,7 @@ namespace hpx {
         util::external_timer::init(nullptr, 0, 1);
 #endif
 
-        LRT_(info) << "cmd_line: " << get_config().get_cmd_line();
+        LRT_(info).format("cmd_line: {}", get_config().get_cmd_line());
 
         lbt_ << "(1st stage) runtime::start: booting locality " << here();
 
@@ -1468,9 +1431,9 @@ namespace hpx {
         std::unique_lock<std::mutex> l(mtx_);
         while (!stop_done_)
         {
-            LRT_(info) << "runtime: about to enter wait state";
+            LRT_(info).format("runtime: about to enter wait state");
             wait_condition_.wait(l);
-            LRT_(info) << "runtime: exiting wait state";
+            LRT_(info).format("runtime: exiting wait state");
         }
     }
 
@@ -1504,7 +1467,7 @@ namespace hpx {
 
     int runtime::wait()
     {
-        LRT_(info) << "runtime_local: about to enter wait state";
+        LRT_(info).format("runtime_local: about to enter wait state");
 
         // start the wait_helper in a separate thread
         std::mutex mtx;
@@ -1528,15 +1491,9 @@ namespace hpx {
         // block main thread
         t.join();
 
-        util::yield_while(
-            [this]() {
-                return thread_manager_->get_thread_count() >
-                    1 + thread_manager_->get_background_thread_count() &&
-                    state_.load() < state_shutdown;
-            },
-            "runtime::wait");
+        thread_manager_->wait();
 
-        LRT_(info) << "runtime_local: exiting wait state";
+        LRT_(info).format("runtime_local: exiting wait state");
         return result_;
     }
 
@@ -1545,7 +1502,7 @@ namespace hpx {
     // schedule a task managed by timer_pool to initiate second part
     void runtime::stop(bool blocking)
     {
-        LRT_(warning) << "runtime_local: about to stop services";
+        LRT_(warning).format("runtime_local: about to stop services");
 
         // execute all on_exit functions whenever the first thread calls this
         this->runtime::stopping();
@@ -1580,11 +1537,11 @@ namespace hpx {
             // this disables all logging from the main thread
             deinit_tss_helper("main-thread", 0);
 
-            LRT_(info) << "runtime_local: stopped all services";
+            LRT_(info).format("runtime_local: stopped all services");
         }
 
 #ifdef HPX_HAVE_TIMER_POOL
-        LTM_(info) << "stop: stopping timer pool";
+        LTM_(info).format("stop: stopping timer pool");
         timer_pool_.stop();
         if (blocking)
         {
@@ -1593,7 +1550,7 @@ namespace hpx {
         }
 #endif
 #ifdef HPX_HAVE_IO_POOL
-        LTM_(info) << "stop: stopping io pool";
+        LTM_(info).format("stop: stopping io pool");
         io_pool_.stop();
         if (blocking)
         {
@@ -1615,7 +1572,7 @@ namespace hpx {
         // this disables all logging from the main thread
         deinit_tss_helper("main-thread", 0);
 
-        LRT_(info) << "runtime_local: stopped all services";
+        LRT_(info).format("runtime_local: stopped all services");
 
         std::lock_guard<std::mutex> l(mtx);
         cond.notify_all();    // we're done now
@@ -1623,7 +1580,7 @@ namespace hpx {
 
     int runtime::suspend()
     {
-        LRT_(info) << "runtime_local: about to suspend runtime";
+        LRT_(info).format("runtime_local: about to suspend runtime");
 
         if (state_.load() == state_sleeping)
         {
@@ -1636,13 +1593,6 @@ namespace hpx {
                 "Can only suspend runtime from running state");
             return -1;
         }
-
-        util::yield_while(
-            [this]() {
-                return thread_manager_->get_thread_count() >
-                    thread_manager_->get_background_thread_count();
-            },
-            "runtime::suspend");
 
         thread_manager_->suspend();
 
@@ -1660,7 +1610,7 @@ namespace hpx {
 
     int runtime::resume()
     {
-        LRT_(info) << "runtime_local: about to resume runtime";
+        LRT_(info).format("runtime_local: about to resume runtime");
 
         if (state_.load() == state_running)
         {
@@ -1884,15 +1834,14 @@ namespace hpx {
                         used_processing_units),
                     ec);
 
-                // comment this out for now as on CIrcleCI this is causing unending grief
+                // comment this out for now as on CircleCI this is causing unending grief
                 //if (ec)
                 //{
-                //    HPX_THROW_EXCEPTION(kernel_error
-                //        , "runtime::init_tss_ex"
-                //        , hpx::util::format(
-                //            "failed to set thread affinity mask ("
-                //            HPX_CPU_MASK_PREFIX "{:x}) for service thread: {}",
-                //            used_processing_units, detail::thread_name()));
+                //    HPX_THROW_EXCEPTION(kernel_error, "runtime::init_tss_ex",
+                //        "failed to set thread affinity mask ({}) for service "
+                //        "thread: {}",
+                //        hpx::threads::to_string(used_processing_units),
+                //        detail::thread_name());
                 //}
             }
 #endif
@@ -1969,7 +1918,7 @@ namespace hpx {
             return &main_pool_;
 
         HPX_THROW_EXCEPTION(bad_parameter, "runtime::get_thread_pool",
-            std::string("unknown thread pool requested: ") + name);
+            "unknown thread pool requested: {}", name);
         return nullptr;
     }
 
@@ -2097,7 +2046,7 @@ namespace hpx {
         {
             thread_stacksize size_enum = thread_stacksize::unknown;
 
-            util::runtime_configuration const& rtcfg = hpx::get_config();
+            hpx::util::runtime_configuration const& rtcfg = hpx::get_config();
             if (rtcfg.get_stack_size(thread_stacksize::small_) == size)
                 size_enum = thread_stacksize::small_;
             else if (rtcfg.get_stack_size(thread_stacksize::medium) == size)

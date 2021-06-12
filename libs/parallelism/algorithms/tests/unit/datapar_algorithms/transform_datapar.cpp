@@ -4,9 +4,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <hpx/hpx.hpp>
-#include <hpx/hpx_init.hpp>
 #include <hpx/include/datapar.hpp>
+#include <hpx/local/init.hpp>
 
 #include <iostream>
 #include <string>
@@ -20,11 +19,11 @@ void test_transform()
 {
     using namespace hpx::execution;
 
-    test_transform(execution::dataseq, IteratorTag());
-    test_transform(execution::datapar, IteratorTag());
+    test_transform(simd, IteratorTag());
+    test_transform(simdpar, IteratorTag());
 
-    test_transform_async(execution::dataseq(task), IteratorTag());
-    test_transform_async(execution::datapar(task), IteratorTag());
+    test_transform_async(simd(task), IteratorTag());
+    test_transform_async(simdpar(task), IteratorTag());
 }
 
 void transform_test()
@@ -38,11 +37,11 @@ void test_transform_exception()
 {
     using namespace hpx::execution;
 
-    test_transform_exception(execution::dataseq, IteratorTag());
-    test_transform_exception(execution::datapar, IteratorTag());
+    test_transform_exception(simd, IteratorTag());
+    test_transform_exception(simdpar, IteratorTag());
 
-    test_transform_exception_async(execution::dataseq(task), IteratorTag());
-    test_transform_exception_async(execution::datapar(task), IteratorTag());
+    test_transform_exception_async(simd(task), IteratorTag());
+    test_transform_exception_async(simdpar(task), IteratorTag());
 }
 
 void transform_exception_test()
@@ -57,11 +56,11 @@ void test_transform_bad_alloc()
 {
     using namespace hpx::execution;
 
-    test_transform_bad_alloc(execution::dataseq, IteratorTag());
-    test_transform_bad_alloc(execution::datapar, IteratorTag());
+    test_transform_bad_alloc(simd, IteratorTag());
+    test_transform_bad_alloc(simdpar, IteratorTag());
 
-    test_transform_bad_alloc_async(execution::dataseq(task), IteratorTag());
-    test_transform_bad_alloc_async(execution::datapar(task), IteratorTag());
+    test_transform_bad_alloc_async(simd(task), IteratorTag());
+    test_transform_bad_alloc_async(simdpar(task), IteratorTag());
 }
 
 void transform_bad_alloc_test()
@@ -83,7 +82,7 @@ int hpx_main(hpx::program_options::variables_map& vm)
     transform_test();
     transform_exception_test();
     transform_bad_alloc_test();
-    return hpx::finalize();
+    return hpx::local::finalize();
 }
 
 int main(int argc, char* argv[])
@@ -100,11 +99,11 @@ int main(int argc, char* argv[])
     std::vector<std::string> const cfg = {"hpx.os_threads=all"};
 
     // Initialize and run HPX
-    hpx::init_params init_args;
+    hpx::local::init_params init_args;
     init_args.desc_cmdline = desc_commandline;
     init_args.cfg = cfg;
 
-    HPX_TEST_EQ_MSG(hpx::init(argc, argv, init_args), 0,
+    HPX_TEST_EQ_MSG(hpx::local::init(hpx_main, argc, argv, init_args), 0,
         "HPX main exited with non-zero status");
 
     return hpx::util::report_errors();

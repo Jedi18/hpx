@@ -11,6 +11,7 @@
 #include <hpx/allocator_support/internal_allocator.hpp>
 #include <hpx/async_base/launch_policy.hpp>
 #include <hpx/coroutines/thread_enums.hpp>
+#include <hpx/execution_base/detail/try_catch_exception_ptr.hpp>
 #include <hpx/execution_base/execution.hpp>
 #include <hpx/functional/deferred_call.hpp>
 #include <hpx/futures/detail/future_data.hpp>
@@ -75,45 +76,25 @@ namespace hpx { namespace lcos { namespace local {
         private:
             void do_run_impl(/*is_void=*/std::false_type)
             {
-                std::exception_ptr p;
-
-                try
-                {
-                    this->set_value(f_());
-                    return;
-                }
-                catch (...)
-                {
-                    p = std::current_exception();
-                }
-
-                // The exception is set outside the catch block since
-                // set_exception may yield. Ending the catch block on a
-                // different worker thread than where it was started may lead
-                // to segfaults.
-                this->set_exception(std::move(p));
+                hpx::intrusive_ptr<base_type> this_(this);
+                hpx::detail::try_catch_exception_ptr(
+                    [&]() { this->set_value(f_()); },
+                    [&](std::exception_ptr ep) {
+                        this->set_exception(std::move(ep));
+                    });
             }
 
             void do_run_impl(/*is_void=*/std::true_type)
             {
-                std::exception_ptr p;
-
-                try
-                {
-                    f_();
-                    this->set_value(result_type());
-                    return;
-                }
-                catch (...)
-                {
-                    p = std::current_exception();
-                }
-
-                // The exception is set outside the catch block since
-                // set_exception may yield. Ending the catch block on a
-                // different worker thread than where it was started may lead
-                // to segfaults.
-                this->set_exception(std::move(p));
+                hpx::intrusive_ptr<base_type> this_(this);
+                hpx::detail::try_catch_exception_ptr(
+                    [&]() {
+                        f_();
+                        this->set_value(result_type());
+                    },
+                    [&](std::exception_ptr ep) {
+                        this->set_exception(std::move(ep));
+                    });
             }
 
         protected:
@@ -127,9 +108,7 @@ namespace hpx { namespace lcos { namespace local {
             {
                 this->check_started();
 
-                typedef typename Base::future_base_type future_base_type;
-                future_base_type this_(this);
-
+                hpx::intrusive_ptr<base_type> this_(this);
                 if (policy == launch::fork)
                 {
                     threads::thread_init_data data(
@@ -280,9 +259,7 @@ namespace hpx { namespace lcos { namespace local {
                 {
                     this->check_started();
 
-                    typedef typename Base::future_base_type future_base_type;
-                    future_base_type this_(this);
-
+                    hpx::intrusive_ptr<base_type> this_(this);
                     parallel::execution::post(*exec_,
                         util::deferred_call(
                             &base_type::run_impl, std::move(this_)),
