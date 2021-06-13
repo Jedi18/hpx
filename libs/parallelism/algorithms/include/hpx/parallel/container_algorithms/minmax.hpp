@@ -627,7 +627,7 @@ namespace hpx {
         typename Proj = hpx::parallel::util::projection_identity>
         typename minmax_element_result<
             typename hpx::traits::range_iterator<Rng>::type,
-            typename hpx::traits::range_iterator<Rng>::type>>
+            typename hpx::traits::range_iterator<Rng>::type> >
         ::type minmax_element(Rng&& rng, F&& f = F(), Proj&& proj = Proj());
 
     ///////////////////////////////////////////////////////////////////////////
@@ -923,7 +923,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend FwdIter tag_fallback_invoke(hpx::ranges::min_element_t,
+        friend FwdIter tag_fallback_dispatch(hpx::ranges::min_element_t,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -949,8 +949,8 @@ namespace hpx { namespace ranges {
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
-        tag_fallback_invoke(hpx::ranges::min_element_t, Rng&& rng, F&& f = F(),
-            Proj&& proj = Proj())
+        tag_fallback_dispatch(hpx::ranges::min_element_t, Rng&& rng,
+            F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
                 hpx::traits::is_forward_iterator<
@@ -981,7 +981,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_fallback_invoke(hpx::ranges::min_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::min_element_t, ExPolicy&& policy,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1008,7 +1008,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             typename hpx::traits::range_iterator<Rng>::type>::type
-        tag_fallback_invoke(hpx::ranges::min_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::min_element_t, ExPolicy&& policy,
             Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
@@ -1045,7 +1045,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend FwdIter tag_fallback_invoke(hpx::ranges::max_element_t,
+        friend FwdIter tag_fallback_dispatch(hpx::ranges::max_element_t,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert((hpx::traits::is_forward_iterator<FwdIter>::value),
@@ -1071,8 +1071,8 @@ namespace hpx { namespace ranges {
             )>
         // clang-format on
         friend typename hpx::traits::range_iterator<Rng>::type
-        tag_fallback_invoke(hpx::ranges::max_element_t, Rng&& rng, F&& f = F(),
-            Proj&& proj = Proj())
+        tag_fallback_dispatch(hpx::ranges::max_element_t, Rng&& rng,
+            F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
                 hpx::traits::is_forward_iterator<
@@ -1103,7 +1103,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_fallback_invoke(hpx::ranges::max_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::max_element_t, ExPolicy&& policy,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1130,7 +1130,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             typename hpx::traits::range_iterator<Rng>::type>::type
-        tag_fallback_invoke(hpx::ranges::max_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::max_element_t, ExPolicy&& policy,
             Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
@@ -1167,7 +1167,7 @@ namespace hpx { namespace ranges {
                 >::value
             )>
         // clang-format on
-        friend minmax_element_result<FwdIter> tag_fallback_invoke(
+        friend minmax_element_result<FwdIter> tag_fallback_dispatch(
             hpx::ranges::minmax_element_t, FwdIter first, Sent last,
             F&& f = F(), Proj&& proj = Proj())
         {
@@ -1195,7 +1195,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend minmax_element_result<
             typename hpx::traits::range_iterator<Rng>::type>
-        tag_fallback_invoke(hpx::ranges::minmax_element_t, Rng&& rng,
+        tag_fallback_dispatch(hpx::ranges::minmax_element_t, Rng&& rng,
             F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(
@@ -1227,7 +1227,7 @@ namespace hpx { namespace ranges {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             minmax_element_result<FwdIter>>::type
-        tag_fallback_invoke(hpx::ranges::minmax_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::minmax_element_t, ExPolicy&& policy,
             FwdIter first, Sent last, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1255,7 +1255,7 @@ namespace hpx { namespace ranges {
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             minmax_element_result<
                 typename hpx::traits::range_iterator<Rng>::type>>::type
-        tag_fallback_invoke(hpx::ranges::minmax_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::ranges::minmax_element_t, ExPolicy&& policy,
             Rng&& rng, F&& f = F(), Proj&& proj = Proj())
         {
             static_assert(

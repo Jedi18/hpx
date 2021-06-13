@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "iter_sent.hpp"
+#include <hpx/iterator_support/tests/iter_sent.hpp>
 #include "test_utils.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////

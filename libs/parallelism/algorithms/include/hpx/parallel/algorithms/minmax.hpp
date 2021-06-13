@@ -368,13 +368,14 @@ namespace hpx {
 #include <hpx/assert.hpp>
 #include <hpx/concepts/concepts.hpp>
 #include <hpx/functional/invoke.hpp>
-#include <hpx/functional/tag_fallback_invoke.hpp>
+#include <hpx/functional/tag_fallback_dispatch.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/parallel/util/result_types.hpp>
 
 #include <hpx/algorithms/traits/projected.hpp>
 #include <hpx/executors/execution_policy.hpp>
 #include <hpx/parallel/algorithms/detail/dispatch.hpp>
+#include <hpx/parallel/algorithms/detail/distance.hpp>
 #include <hpx/parallel/tagspec.hpp>
 #include <hpx/parallel/util/compare_projected.hpp>
 #include <hpx/parallel/util/detail/algorithm_result.hpp>
@@ -933,7 +934,7 @@ namespace hpx {
                 hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend FwdIter tag_fallback_invoke(
+        friend FwdIter tag_fallback_dispatch(
             hpx::min_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -954,7 +955,7 @@ namespace hpx {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_fallback_invoke(hpx::min_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::min_element_t, ExPolicy&& policy,
             FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -979,7 +980,7 @@ namespace hpx {
                 hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend FwdIter tag_fallback_invoke(
+        friend FwdIter tag_fallback_dispatch(
             hpx::max_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1000,7 +1001,7 @@ namespace hpx {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             FwdIter>::type
-        tag_fallback_invoke(hpx::max_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::max_element_t, ExPolicy&& policy,
             FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1025,7 +1026,7 @@ namespace hpx {
                 hpx::traits::is_iterator<FwdIter>::value
             )>
         // clang-format on
-        friend minmax_element_result<FwdIter> tag_fallback_invoke(
+        friend minmax_element_result<FwdIter> tag_fallback_dispatch(
             hpx::minmax_element_t, FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
@@ -1046,7 +1047,7 @@ namespace hpx {
         // clang-format on
         friend typename parallel::util::detail::algorithm_result<ExPolicy,
             minmax_element_result<FwdIter>>::type
-        tag_fallback_invoke(hpx::minmax_element_t, ExPolicy&& policy,
+        tag_fallback_dispatch(hpx::minmax_element_t, ExPolicy&& policy,
             FwdIter first, FwdIter last, F&& f = F())
         {
             static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
