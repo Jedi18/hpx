@@ -22,6 +22,7 @@ set(tests
     destroy_range
     destroyn_range
     distance
+    ends_with_range
     equal_range
     equal_binary_range
     fill_range
@@ -86,6 +87,7 @@ set(tests
     set_union_range
     sort_range
     stable_sort_range
+    starts_with_range
     transform_range
     transform_range_binary
     transform_range2
