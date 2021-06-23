@@ -69,6 +69,7 @@ set(algorithms_headers
     hpx/parallel/algorithms/set_symmetric_difference.hpp
     hpx/parallel/algorithms/set_union.hpp
     hpx/parallel/algorithms/stable_sort.hpp
+    hpx/parallel/algorithms/starts_ends_with.hpp
     hpx/parallel/algorithms/sort_by_key.hpp
     hpx/parallel/algorithms/sort.hpp
     hpx/parallel/algorithms/swap_ranges.hpp
@@ -88,6 +89,7 @@ set(algorithms_headers
     hpx/parallel/container_algorithms/copy.hpp
     hpx/parallel/container_algorithms/count.hpp
     hpx/parallel/container_algorithms/destroy.hpp
+    hpx/parallel/container_algorithms/ends_with.hpp
     hpx/parallel/container_algorithms/equal.hpp
     hpx/parallel/container_algorithms/fill.hpp
     hpx/parallel/container_algorithms/find.hpp
@@ -119,6 +121,7 @@ set(algorithms_headers
     hpx/parallel/container_algorithms/set_union.hpp
     hpx/parallel/container_algorithms/sort.hpp
     hpx/parallel/container_algorithms/stable_sort.hpp
+    hpx/parallel/container_algorithms/starts_with.hpp
     hpx/parallel/container_algorithms/transform.hpp
     hpx/parallel/container_algorithms/transform_reduce.hpp
     hpx/parallel/container_algorithms/uninitialized_copy.hpp
