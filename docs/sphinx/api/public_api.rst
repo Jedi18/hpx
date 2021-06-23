@@ -116,6 +116,7 @@ Functions
 - :cpp:func:`hpx::ranges::copy_n`
 - :cpp:func:`hpx::ranges::count`
 - :cpp:func:`hpx::ranges::count_if`
+- :cpp:func:`hpx::ranges::ends_with`
 - :cpp:func:`hpx::ranges::equal`
 - :cpp:func:`hpx::ranges::fill`
 - :cpp:func:`hpx::ranges::fill_n`
@@ -143,6 +144,7 @@ Functions
 - :cpp:func:`hpx::ranges::set_intersection`
 - :cpp:func:`hpx::ranges::set_symmetric_difference`
 - :cpp:func:`hpx::ranges::set_union`
+- :cpp:func:`hpx::ranges::starts_with`
 - :cpp:func:`hpx::ranges::for_loop`
 - :cpp:func:`hpx::ranges::for_loop_strided`
 
