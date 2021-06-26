@@ -298,16 +298,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     -> util::in_in_result<Iter1, Iter2> {
                     difference_type1 mismatched =
                         static_cast<difference_type1>(tok.get_data());
-                    if (mismatched != count1)
-                    {
-                        std::advance(first1, mismatched);
-                        std::advance(first2, mismatched);
-                    }
-                    else
-                    {
-                        first1 = last1;
-                        first2 = last2;
-                    }
+                    std::advance(first1, mismatched);
+                    std::advance(first2, mismatched);
                     return {first1, first2};
                 };
 
