@@ -47,6 +47,7 @@ Functions
 - :cpp:func:`hpx::copy_n`
 - :cpp:func:`hpx::count`
 - :cpp:func:`hpx::count_if`
+- :cpp:func:`hpx::ends_with`
 - :cpp:func:`hpx::equal`
 - :cpp:func:`hpx::fill`
 - :cpp:func:`hpx::fill_n`
@@ -99,6 +100,7 @@ Functions
 - :cpp:func:`hpx::parallel::v1::sort`
 - :cpp:func:`hpx::parallel::v1::stable_partition`
 - :cpp:func:`hpx::parallel::v1::stable_sort`
+- :cpp:func:`hpx::starts_with`
 - :cpp:func:`hpx::parallel::v1::swap_ranges`
 - :cpp:func:`hpx::transform`
 - :cpp:func:`hpx::parallel::v1::unique`
