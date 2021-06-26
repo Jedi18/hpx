@@ -5,7 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-/// \file parallel/algorithms/starts_ends_with.hpp
+/// \file parallel/algorithms/starts_with.hpp
 
 #pragma once
 
@@ -15,8 +15,8 @@
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/parallel/algorithms/detail/dispatch.hpp>
 #include <hpx/parallel/algorithms/detail/distance.hpp>
-#include <hpx/parallel/algorithms/mismatch.hpp>
 #include <hpx/parallel/algorithms/equal.hpp>
+#include <hpx/parallel/algorithms/mismatch.hpp>
 #include <hpx/parallel/util/detail/algorithm_result.hpp>
 #include <hpx/parallel/util/invoke_projected.hpp>
 #include <hpx/parallel/util/projection_identity.hpp>
@@ -119,63 +119,81 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 });
         }
     }    // namespace detail
+}}}      // namespace hpx::parallel::v1
+
+namespace hpx {
 
     ///////////////////////////////////////////////////////////////////////////
-    // ends_with
-    namespace detail {
-        /// \cond NOINTERNAL
-        struct ends_with : public detail::algorithm<ends_with, bool>
+    // DPO for hpx::starts_with
+    HPX_INLINE_CONSTEXPR_VARIABLE struct starts_with_t final
+      : hpx::functional::tag_fallback<starts_with_t>
+    {
+    private:
+        // clang-format off
+        template <typename InIter1, typename InIter2,
+            typename Pred = hpx::parallel::v1::detail::equal_to,
+            typename Proj1 = parallel::util::projection_identity,
+            typename Proj2 = parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_iterator<InIter1>::value &&
+                hpx::traits::is_iterator<InIter2>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    hpx::execution::sequenced_policy, Pred,
+                    hpx::parallel::traits::projected<Proj1, InIter1>,
+                    hpx::parallel::traits::projected<Proj2, InIter2>
+                >::value
+            )>
+        // clang-format on
+        friend bool tag_fallback_dispatch(hpx::starts_with_t, InIter1 first1,
+            InIter1 last1, InIter2 first2, InIter2 last2, Pred&& pred = Pred(),
+            Proj1&& proj1 = Proj1(), Proj2&& proj2 = Proj2())
         {
-            ends_with()
-              : ends_with::algorithm("ends_with")
-            {
-            }
+            static_assert(hpx::traits::is_input_iterator<InIter1>::value,
+                "Required at least input iterator.");
 
-            template <typename ExPolicy, typename Iter1, typename Sent1,
-                typename Iter2, typename Sent2, typename Pred, typename Proj1,
-                typename Proj2>
-            static bool sequential(ExPolicy, Iter1 first1, Sent1 last1,
-                Iter2 first2, Sent2 last2, Pred&& pred, Proj1&& proj1,
-                Proj2&& proj2)
-            {
-                const auto drop = detail::distance(first1, last1) -
-                    detail::distance(first2, last2);
+            static_assert(hpx::traits::is_input_iterator<InIter2>::value,
+                "Required at least input iterator.");
 
-                if (drop < 0)
-                    return false;
+            return hpx::parallel::v1::detail::starts_with().call(
+                hpx::execution::seq, first1, last1, first2, last2,
+                std::forward<Pred>(pred), std::forward<Proj1>(proj1),
+                std::forward<Proj2>(proj2));
+        }
 
-                return hpx::parallel::v1::detail::equal_binary().call(
-                    hpx::execution::seq, std::next(std::move(first1), drop),
-                    std::move(last1), std::move(first2), std::move(last2),
-                    std::forward<Pred>(pred), std::forward<Proj1>(proj1),
-                    std::forward<Proj2>(proj2));
-            }
+        // clang-format off
+        template <typename ExPolicy, typename FwdIter1, typename FwdIter2,
+            typename Pred = ranges::equal_to,
+            typename Proj1 = parallel::util::projection_identity,
+            typename Proj2 = parallel::util::projection_identity,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::is_execution_policy<ExPolicy>::value &&
+                hpx::traits::is_iterator<FwdIter1>::value &&
+                hpx::traits::is_iterator<FwdIter2>::value &&
+                hpx::parallel::traits::is_indirect_callable<
+                    ExPolicy, Pred,
+                    hpx::parallel::traits::projected<Proj1, FwdIter1>,
+                    hpx::parallel::traits::projected<Proj2, FwdIter2>
+                >::value
+            )>
+        // clang-format on
+        friend typename parallel::util::detail::algorithm_result<ExPolicy,
+            bool>::type
+        tag_fallback_dispatch(hpx::starts_with_t, ExPolicy&& policy,
+            FwdIter1 first1, FwdIter1 last1, FwdIter2 first2, FwdIter2 last2,
+            Pred&& pred = Pred(), Proj1&& proj1 = Proj1(),
+            Proj2&& proj2 = Proj2())
+        {
+            static_assert(hpx::traits::is_forward_iterator<FwdIter1>::value,
+                "Required at least forward iterator.");
 
-            template <typename ExPolicy, typename FwdIter1, typename Sent1,
-                typename FwdIter2, typename Sent2, typename Pred,
-                typename Proj1, typename Proj2>
-            static typename util::detail::algorithm_result<ExPolicy, bool>::type
-            parallel(ExPolicy&& policy, FwdIter1 first1, Sent1 last1,
-                FwdIter2 first2, Sent2 last2, Pred&& pred, Proj1&& proj1,
-                Proj2&& proj2)
-            {
-                const auto drop = detail::distance(first1, last1) -
-                    detail::distance(first2, last2);
+            static_assert(hpx::traits::is_forward_iterator<FwdIter2>::value,
+                "Required at least forward iterator.");
 
-                if (drop < 0)
-                {
-                    return util::detail::algorithm_result<ExPolicy, bool>::get(
-                        false);
-                }
+            return hpx::parallel::v1::detail::starts_with().call(
+                std::forward<ExPolicy>(policy), first1, last1, first2, last2,
+                std::forward<Pred>(pred), std::forward<Proj1>(proj1),
+                std::forward<Proj2>(proj2));
+        }
+    } starts_with{};
 
-                return hpx::parallel::v1::detail::equal_binary().call(
-                    std::forward<ExPolicy>(policy),
-                    std::next(std::move(first1), drop), std::move(last1),
-                    std::move(first2), std::move(last2),
-                    std::forward<Pred>(pred), std::forward<Proj1>(proj1),
-                    std::forward<Proj2>(proj2));
-            }
-        };
-        /// \endcond
-    }    // namespace detail
-}}}      // namespace hpx::parallel::v1
+}    // namespace hpx
