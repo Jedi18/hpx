@@ -130,7 +130,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     *dst++ = val;
 
                     // MSVC 2015 fails if op is captured by reference
-                    util::detail::loop_n<std::decay_t<ExPolicy>>(
+                    util::loop_n<std::decay_t<ExPolicy>>(
                         dst, part_size - 1, [=, &val](FwdIter2 it) {
                             *it = hpx::util::invoke(op, val, *it);
                         });
@@ -154,7 +154,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     },
                     // step 2 propagates the partition results from left
                     // to right
-                    hpx::util::unwrapping(op),
+                    hpx::unwrapping(op),
                     // step 3 runs final accumulation on each partition
                     std::move(f3),
                     // step 4 use this return value

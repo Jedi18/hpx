@@ -200,7 +200,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     parallel::util::detail::handle_remote_exceptions<
                         ExPolicy>::call(r, errors);
 
-                    std::vector<SegIter> res = hpx::util::unwrap(std::move(r));
+                    std::vector<SegIter> res = hpx::unwrap(std::move(r));
                     return Algo::sequential_minmax_element_ind(
                         policy, res.begin(), res.size(), f, proj);
                 },
@@ -412,8 +412,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     parallel::util::detail::handle_remote_exceptions<
                         ExPolicy>::call(r, errors);
 
-                    std::vector<result_type> res =
-                        hpx::util::unwrap(std::move(r));
+                    std::vector<result_type> res = hpx::unwrap(std::move(r));
                     return Algo::sequential_minmax_element_ind(
                         policy, res.begin(), res.size(), f, proj);
                 },

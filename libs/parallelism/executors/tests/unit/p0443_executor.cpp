@@ -66,7 +66,7 @@ struct check_context_receiver
     void set_done() noexcept
     {
         HPX_TEST(false);
-    };
+    }
 
     template <typename... Ts>
     void set_value(Ts&&...) noexcept
@@ -252,7 +252,7 @@ struct callback_receiver
     void set_done() noexcept
     {
         HPX_TEST(false);
-    };
+    }
 
     template <typename... Ts>
     void set_value(Ts&&...) noexcept
@@ -338,6 +338,35 @@ void test_properties()
 
         // A hint is not guaranteed to be respected, so we only check that the
         // executor holds the property.
+    }
+
+    {
+        char const* annotation = "<test>";
+        auto exec_prop = ex::with_annotation(exec, annotation);
+        HPX_TEST_EQ(std::string(ex::get_annotation(exec_prop)),
+            std::string(annotation));
+
+        auto check = [annotation]() {
+#if defined(HPX_HAVE_THREAD_DESCRIPTION)
+            HPX_TEST_EQ(std::string(annotation),
+                hpx::threads::get_thread_description(
+                    hpx::threads::get_self_id())
+                    .get_description());
+#else
+            (void) annotation;
+#endif
+        };
+        executed = false;
+        auto os = ex::connect(ex::schedule(exec_prop),
+            callback_receiver<decltype(check)>{check, cond, executed});
+        ex::start(os);
+
+        {
+            std::unique_lock<hpx::lcos::local::mutex> l{mtx};
+            cond.wait(l, [&]() { return executed.load(); });
+        }
+
+        HPX_TEST(executed);
     }
 }
 
@@ -600,6 +629,7 @@ void test_when_all()
                     HPX_TEST_EQ(y, std::string("hello"));
                 }) |
                 ex::sync_wait();
+            HPX_TEST(false);
         }
         catch (std::runtime_error const& e)
         {
@@ -638,6 +668,7 @@ void test_when_all()
                     HPX_TEST_EQ(y, std::string("hello"));
                 }) |
                 ex::sync_wait();
+            HPX_TEST(false);
         }
         catch (std::runtime_error const& e)
         {
@@ -669,11 +700,12 @@ void test_future_sender()
         try
         {
             ex::sync_wait(std::move(f));
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -694,11 +726,12 @@ void test_future_sender()
         try
         {
             ex::sync_wait(std::move(f));
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -734,11 +767,12 @@ void test_future_sender()
         try
         {
             ex::sync_wait(sf);
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -761,11 +795,12 @@ void test_future_sender()
         try
         {
             ex::sync_wait(sf);
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -779,6 +814,16 @@ void test_future_sender()
     {
         auto s = ex::just_on(ex::executor{}, 3);
         auto f = ex::make_future(std::move(s));
+        HPX_TEST_EQ(f.get(), 3);
+    }
+
+    {
+        auto f = ex::just(3) | ex::make_future();
+        HPX_TEST_EQ(f.get(), 3);
+    }
+
+    {
+        auto f = ex::just_on(ex::executor{}, 3) | ex::make_future();
         HPX_TEST_EQ(f.get(), 3);
     }
 
@@ -829,8 +874,7 @@ void test_future_sender()
             ex::transform(std::move(t1), [](std::size_t x) { return x + 1; });
         auto t1f = ex::make_future(std::move(t1s));
         auto last = hpx::dataflow(
-            hpx::util::unwrapping(
-                [](std::size_t x, std::size_t y) { return x + y; }),
+            hpx::unwrapping([](std::size_t x, std::size_t y) { return x + y; }),
             t1f, t2);
 
         HPX_TEST_EQ(last.get(), std::size_t(18));
@@ -1022,6 +1066,7 @@ void test_let_value()
                 HPX_TEST(false);
                 return ex::just(0);
             }) | ex::sync_wait();
+            HPX_TEST(false);
         }
         catch (std::runtime_error const& e)
         {
@@ -1266,11 +1311,12 @@ void test_keep_future_sender()
         try
         {
             ex::sync_wait(std::move(f) | ex::keep_future());
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -1294,11 +1340,12 @@ void test_keep_future_sender()
         try
         {
             ex::sync_wait(std::move(f) | ex::keep_future());
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -1329,11 +1376,12 @@ void test_keep_future_sender()
         try
         {
             ex::sync_wait(sf | ex::keep_future());
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -1353,11 +1401,12 @@ void test_keep_future_sender()
         try
         {
             ex::sync_wait(sf | ex::keep_future());
+            HPX_TEST(false);
         }
         catch (...)
         {
             exception_thrown = true;
-        };
+        }
         HPX_TEST(exception_thrown);
     }
 
@@ -1401,7 +1450,7 @@ void test_keep_future_sender()
         auto f = hpx::async([]() { return 42; });
         auto sf = hpx::async([]() { return 3.14; }).share();
 
-        auto fun = hpx::util::unwrapping(
+        auto fun = hpx::unwrapping(
             [](int&& x, double const& y) { return x * 2 + (int(y) / 2); });
         HPX_TEST_EQ(ex::when_all(std::move(f) | ex::keep_future(),
                         sf | ex::keep_future()) |
@@ -1413,7 +1462,7 @@ void test_keep_future_sender()
         auto f = hpx::async([]() { return 42; });
         auto sf = hpx::async([]() { return 3.14; }).share();
 
-        auto fun = hpx::util::unwrapping(
+        auto fun = hpx::unwrapping(
             [](int&& x, double const& y) { return x * 2 + (int(y) / 2); });
         HPX_TEST_EQ(ex::when_all(std::move(f) | ex::keep_future(),
                         sf | ex::keep_future()) |

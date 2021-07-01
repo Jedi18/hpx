@@ -10,11 +10,11 @@
 
 #include <hpx/config.hpp>
 #include <hpx/assert.hpp>
+#include <hpx/errors/try_catch_exception_ptr.hpp>
 #include <hpx/execution/executors/execution.hpp>
 #include <hpx/execution/executors/fused_bulk_execute.hpp>
 #include <hpx/execution/executors/static_chunk_size.hpp>
 #include <hpx/execution/traits/executor_traits.hpp>
-#include <hpx/execution_base/detail/try_catch_exception_ptr.hpp>
 #include <hpx/execution_base/execution.hpp>
 #include <hpx/executors/current_executor.hpp>
 #include <hpx/functional/bind_front.hpp>
@@ -144,7 +144,7 @@ namespace hpx { namespace parallel { namespace execution { namespace detail {
                     std::forward<Future>(predecessor), exec_current,
                     [func = std::move(func)](future_type&& predecessor) mutable
                     -> vector_result_type {
-                        return hpx::util::unwrap(func(std::move(predecessor)));
+                        return hpx::unwrap(func(std::move(predecessor)));
                     });
 
             return hpx::traits::future_access<result_future_type>::create(

@@ -1159,8 +1159,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     std::size_t true_count = 0;
 
                     // MSVC complains if pred or proj is captured by ref below
-                    util::detail::loop_n<std::decay_t<ExPolicy>>(part_begin,
-                        part_size,
+                    util::loop_n<std::decay_t<ExPolicy>>(part_begin, part_size,
                         [pred, proj, &true_count](zip_iterator it) mutable {
                             using hpx::util::invoke;
                             bool f = invoke(pred, invoke(proj, get<0>(*it)));
@@ -1173,10 +1172,10 @@ namespace hpx { namespace parallel { inline namespace v1 {
                         true_count, part_size - true_count);
                 };
 
-                auto f2 = hpx::util::unwrapping(
-                    [](output_iterator_offset const& prev_sum,
-                        output_iterator_offset const& curr)
-                        -> output_iterator_offset {
+                auto f2 =
+                    hpx::unwrapping([](output_iterator_offset const& prev_sum,
+                                        output_iterator_offset const& curr)
+                                        -> output_iterator_offset {
                         return output_iterator_offset(
                             get<0>(prev_sum) + get<0>(curr),
                             get<1>(prev_sum) + get<1>(curr));
@@ -1197,8 +1196,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     std::advance(dest_true, count_true);
                     std::advance(dest_false, count_false);
 
-                    util::detail::loop_n<std::decay_t<ExPolicy>>(part_begin,
-                        part_size,
+                    util::loop_n<std::decay_t<ExPolicy>>(part_begin, part_size,
                         [&dest_true, &dest_false](zip_iterator it) mutable {
                             if (get<1>(*it))
                                 *dest_true++ = get<0>(*it);

@@ -153,7 +153,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     T val = curr.get();
                     FwdIter2 dst = get<1>(part_begin.get_iterator_tuple());
 
-                    util::detail::loop_n<std::decay_t<ExPolicy>>(
+                    util::loop_n<std::decay_t<ExPolicy>>(
                         dst, part_size, [&op, &val](FwdIter2 it) -> void {
                             *it = hpx::util::invoke(op, val, *it);
                         });
@@ -176,7 +176,7 @@ namespace hpx { namespace parallel { inline namespace v1 {
                     },
                     // step 2 propagates the partition results from left
                     // to right
-                    hpx::util::unwrapping(op),
+                    hpx::unwrapping(op),
                     // step 3 runs final accumulation on each partition
                     std::move(f3),
                     // step 4 use this return value

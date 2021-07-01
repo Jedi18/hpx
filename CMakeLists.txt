@@ -323,7 +323,10 @@ if(HPX_WITH_PRECOMPILED_HEADERS)
   set(HPX_WITH_PRECOMPILED_HEADERS_INTERNAL ON)
 
   add_library(hpx_precompiled_headers OBJECT libs/src/dummy.cpp)
-  target_link_libraries(hpx_precompiled_headers PRIVATE hpx_private_flags)
+  target_link_libraries(
+    hpx_precompiled_headers PRIVATE hpx_public_flags hpx_private_flags
+                                    hpx_base_libraries
+  )
   target_precompile_headers(
     hpx_precompiled_headers
     PRIVATE
@@ -1039,10 +1042,25 @@ if(HPX_WITH_APEX)
     "Do not update code from remote APEX repository." OFF CATEGORY "Profiling"
   )
   hpx_option(
-    HPX_WITH_APEX_TAG STRING "APEX repository tag or branch" "v2.4.0"
+    HPX_WITH_APEX_TAG STRING "APEX repository tag or branch" "v2.4.1"
     CATEGORY "Profiling"
   )
 endif()
+
+# Options for automatically fetching Asio
+hpx_option(
+  HPX_WITH_FETCH_ASIO
+  BOOL
+  "Use FetchContent to fetch Asio. By default an installed Asio will be used. (default: OFF)"
+  OFF
+  CATEGORY "Build Targets"
+  ADVANCED
+)
+hpx_option(
+  HPX_WITH_ASIO_TAG STRING "Asio repository tag or branch" "asio-1-18-2"
+  CATEGORY "Build Targets"
+  ADVANCED
+)
 
 # cmake-format: off
 # LibCDS option
@@ -1715,8 +1733,6 @@ if(NOT WIN32)
   # System libraries
   # ############################################################################
   if(NOT MSVC)
-    hpx_add_compile_flag_if_available(-pthread)
-    hpx_add_link_flag_if_available(-pthread TARGETS EXE SHARED)
     if(HPX_CXX11_STD_ATOMIC_LIBRARIES)
       target_link_libraries(
         hpx_base_libraries INTERFACE ${HPX_CXX11_STD_ATOMIC_LIBRARIES}
@@ -2132,6 +2148,8 @@ endif()
 # library. Dependencies that are only needed by plugins, examples or tests
 # should be found separately in the appropriate subdirectory.
 
+include(HPX_SetupThreads)
+
 # Setup our required Boost libraries.
 include(HPX_SetupBoost)
 include(HPX_SetupBoostFilesystem)
@@ -2308,7 +2326,7 @@ hpx_include(Documentation)
 # ##############################################################################
 # Target specification
 # ##############################################################################
-if(HPX_WITH_TOOLS)
+if(HPX_WITH_TOOLS OR HPX_WITH_TESTS_BENCHMARKS)
   add_hpx_pseudo_target(tools)
   add_subdirectory(tools)
 endif()

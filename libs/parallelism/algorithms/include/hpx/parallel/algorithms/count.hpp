@@ -155,9 +155,9 @@ namespace hpx {
 #include <hpx/config.hpp>
 #include <hpx/algorithms/traits/segmented_iterator_traits.hpp>
 #include <hpx/concepts/concepts.hpp>
+#include <hpx/functional/bind_back.hpp>
 #include <hpx/functional/invoke.hpp>
 #include <hpx/functional/tag_fallback_dispatch.hpp>
-#include <hpx/functional/bind_back.hpp>
 #include <hpx/iterator_support/range.hpp>
 #include <hpx/iterator_support/traits/is_iterator.hpp>
 #include <hpx/pack_traversal/unwrap.hpp>
@@ -232,8 +232,8 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 operator()(Iter part_begin, std::size_t part_size)
             {
                 typename std::iterator_traits<Iter>::difference_type ret = 0;
-                util::detail::loop_n<execution_policy_type>(part_begin,
-                    part_size, hpx::util::bind_back(*this, std::ref(ret)));
+                util::loop_n<execution_policy_type>(part_begin, part_size,
+                    hpx::util::bind_back(*this, std::ref(ret)));
                 return ret;
             }
 
@@ -294,12 +294,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 return util::partitioner<ExPolicy, difference_type>::call(
                     std::forward<ExPolicy>(policy), first,
                     detail::distance(first, last), std::move(f1),
-                    hpx::util::unwrapping(
-                        [](std::vector<difference_type>&& results) {
-                            return util::accumulate_n(hpx::util::begin(results),
-                                hpx::util::size(results), difference_type(0),
-                                std::plus<difference_type>());
-                        }));
+                    hpx::unwrapping([](std::vector<difference_type>&& results) {
+                        return util::accumulate_n(hpx::util::begin(results),
+                            hpx::util::size(results), difference_type(0),
+                            std::plus<difference_type>());
+                    }));
             }
         };
         /// \endcond
@@ -388,12 +387,11 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 return util::partitioner<ExPolicy, difference_type>::call(
                     std::forward<ExPolicy>(policy), first,
                     detail::distance(first, last), std::move(f1),
-                    hpx::util::unwrapping(
-                        [](std::vector<difference_type>&& results) {
-                            return util::accumulate_n(hpx::util::begin(results),
-                                hpx::util::size(results), difference_type(0),
-                                std::plus<difference_type>());
-                        }));
+                    hpx::unwrapping([](std::vector<difference_type>&& results) {
+                        return util::accumulate_n(hpx::util::begin(results),
+                            hpx::util::size(results), difference_type(0),
+                            std::plus<difference_type>());
+                    }));
             }
         };
         /// \endcond
