@@ -436,7 +436,7 @@ namespace hpx { namespace segmented {
             hpx::traits::is_segmented_iterator<SegIter>::value
         )>
     // clang-format on
-    SegIter tag_invoke(hpx::min_element_t, SegIter first, SegIter last, F&& f)
+    SegIter tag_dispatch(hpx::min_element_t, SegIter first, SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
             "Requires at least forward iterator.");
@@ -466,7 +466,7 @@ namespace hpx { namespace segmented {
     // clang-format on
     typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
         SegIter>::type
-    tag_invoke(hpx::min_element_t, ExPolicy&& policy, SegIter first,
+    tag_dispatch(hpx::min_element_t, ExPolicy&& policy, SegIter first,
         SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
@@ -497,7 +497,7 @@ namespace hpx { namespace segmented {
             hpx::traits::is_segmented_iterator<SegIter>::value
         )>
     // clang-format on
-    SegIter tag_invoke(hpx::max_element_t, SegIter first, SegIter last, F&& f)
+    SegIter tag_dispatch(hpx::max_element_t, SegIter first, SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
             "Requires at least forward iterator.");
@@ -527,7 +527,7 @@ namespace hpx { namespace segmented {
     // clang-format on
     typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
         SegIter>::type
-    tag_invoke(hpx::max_element_t, ExPolicy&& policy, SegIter first,
+    tag_dispatch(hpx::max_element_t, ExPolicy&& policy, SegIter first,
         SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
@@ -558,7 +558,7 @@ namespace hpx { namespace segmented {
             hpx::traits::is_segmented_iterator<SegIter>::value
         )>
     // clang-format on
-    minmax_element_result<SegIter> tag_invoke(
+    minmax_element_result<SegIter> tag_dispatch(
         hpx::minmax_element_t, SegIter first, SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
@@ -589,7 +589,7 @@ namespace hpx { namespace segmented {
     // clang-format on
     typename hpx::parallel::util::detail::algorithm_result<ExPolicy,
         minmax_element_result<SegIter>>::type
-    tag_invoke(hpx::minmax_element_t, ExPolicy&& policy, SegIter first,
+    tag_dispatch(hpx::minmax_element_t, ExPolicy&& policy, SegIter first,
         SegIter last, F&& f)
     {
         static_assert((hpx::traits::is_forward_iterator<SegIter>::value),
