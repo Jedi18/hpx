@@ -122,7 +122,7 @@ namespace hpx {
     min_element(ExPolicy&& policy, FwdIter first, FwdIter last, F&& f);
 
     /////////////////////////////////////////////////////////////////////////////
-    /// Finds the greatest element in the range [first, last) using the given
+    /// Finds the largest element in the range [first, last) using the given
     /// comparison function \a f.
     ///
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
@@ -168,7 +168,7 @@ namespace hpx {
 
     /////////////////////////////////////////////////////////////////////////////
     /// Removes all elements satisfying specific criteria from the range
-    /// Finds the greatest element in the range [first, last) using the given
+    /// Finds the largest element in the range [first, last) using the given
     /// comparison function \a f.
     ///
     /// \note   Complexity: Exactly \a max(N-1, 0) comparisons, where
@@ -233,7 +233,7 @@ namespace hpx {
     max_element(ExPolicy&& policy, FwdIter first, FwdIter last, F&& f);
 
     /////////////////////////////////////////////////////////////////////////////
-    /// Finds the greatest element in the range [first, last) using the given
+    /// Finds the largest element in the range [first, last) using the given
     /// comparison function \a f.
     ///
     /// \note   Complexity: At most \a max(floor(3/2*(N-1)), 0) applications of
@@ -271,7 +271,7 @@ namespace hpx {
     ///           \a minmax_element_result<FwdIter>
     ///           The \a minmax_element algorithm returns a pair consisting of
     ///           an iterator to the smallest element as the min element and
-    ///           an iterator to the greatest element as the max element. Returns
+    ///           an iterator to the largest element as the max element. Returns
     ///           minmax_element_result<FwdIter>{first, first} if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
@@ -283,7 +283,7 @@ namespace hpx {
         FwdIter first, FwdIter last, F&& f);
 
     /////////////////////////////////////////////////////////////////////////////
-    /// Finds the greatest element in the range [first, last) using the given
+    /// Finds the largest element in the range [first, last) using the given
     /// comparison function \a f.
     ///
     /// \note   Complexity: At most \a max(floor(3/2*(N-1)), 0) applications of
@@ -347,7 +347,7 @@ namespace hpx {
     ///           otherwise.
     ///           The \a minmax_element algorithm returns a pair consisting of
     ///           an iterator to the smallest element as the min element and
-    ///           an iterator to the greatest element as the max element. Returns
+    ///           an iterator to the largest element as the max element. Returns
     ///           std::make_pair(first, first) if the range is empty. If
     ///           several elements are equivalent to the smallest element, the
     ///           iterator to the first such element is returned. If several
@@ -406,12 +406,15 @@ namespace hpx { namespace parallel { inline namespace v1 {
             if (count == 0 || count == 1)
                 return it;
 
+            using element_type =
+                typename std::iterator_traits<FwdIter>::value_type;
+
             FwdIter smallest = it;
 
             util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
                 [&f, &smallest, &proj, value = HPX_INVOKE(proj, *smallest)](
                     FwdIter const& curr) mutable -> void {
-                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    element_type curr_value = HPX_INVOKE(proj, *curr);
                     if (HPX_INVOKE(f, curr_value, value))
                     {
                         smallest = curr;
@@ -441,10 +444,13 @@ namespace hpx { namespace parallel { inline namespace v1 {
 
                 auto smallest = *it;
 
+                using element_type = typename std::iterator_traits<
+                    decltype(smallest)>::value_type;
+
                 util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
                     [&f, &smallest, &proj, value = HPX_INVOKE(proj, *smallest)](
                         FwdIter const& curr) mutable -> void {
-                        auto curr_value = HPX_INVOKE(proj, **curr);
+                        element_type curr_value = HPX_INVOKE(proj, **curr);
                         if (HPX_INVOKE(f, curr_value, value))
                         {
                             smallest = *curr;
@@ -463,21 +469,27 @@ namespace hpx { namespace parallel { inline namespace v1 {
             template <typename ExPolicy, typename FwdIter, typename Sent,
                 typename F, typename Proj>
             static FwdIter sequential(
-                ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
+                ExPolicy&& policy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
                 if (first == last)
                     return first;
 
-                FwdIter smallest = first;
-                ++first;
-                for (; first != last; ++first)
-                {
-                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *first),
-                            hpx::util::invoke(proj, *smallest)))
-                    {
-                        smallest = first;
-                    }
-                }
+                using element_type =
+                    typename std::iterator_traits<FwdIter>::value_type;
+
+                auto smallest = first;
+
+                util::loop(std::forward<ExPolicy>(policy), ++first, last,
+                    [&f, &smallest, &proj, value = HPX_INVOKE(proj, *smallest)](
+                        FwdIter const& curr) mutable -> void {
+                        element_type curr_value = HPX_INVOKE(proj, *curr);
+                        if (HPX_INVOKE(f, curr_value, value))
+                        {
+                            smallest = curr;
+                            value = std::move(curr_value);
+                        }
+                    });
+
                 return smallest;
             }
 
@@ -555,20 +567,23 @@ namespace hpx { namespace parallel { inline namespace v1 {
             if (count == 0 || count == 1)
                 return it;
 
-            FwdIter greatest = it;
+            using element_type =
+                typename std::iterator_traits<FwdIter>::value_type;
+
+            FwdIter largest = it;
 
             util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
-                [&f, &greatest, &proj, value = HPX_INVOKE(proj, *greatest)](
+                [&f, &largest, &proj, value = HPX_INVOKE(proj, *largest)](
                     FwdIter const& curr) mutable -> void {
-                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    element_type curr_value = HPX_INVOKE(proj, *curr);
                     if (HPX_INVOKE(f, value, curr_value))
                     {
-                        greatest = curr;
+                        largest = curr;
                         value = std::move(curr_value);
                     }
                 });
 
-            return greatest;
+            return largest;
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -588,20 +603,23 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 if (count == 1)
                     return *it;
 
-                auto greatest = *it;
+                auto largest = *it;
+
+                using element_type = typename std::iterator_traits<
+                    decltype(largest)>::value_type;
 
                 util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
-                    [&f, &greatest, &proj, value = HPX_INVOKE(proj, *greatest)](
+                    [&f, &largest, &proj, value = HPX_INVOKE(proj, *largest)](
                         FwdIter const& curr) mutable -> void {
-                        auto curr_value = HPX_INVOKE(proj, **curr);
+                        element_type curr_value = HPX_INVOKE(proj, **curr);
                         if (HPX_INVOKE(f, value, curr_value))
                         {
-                            greatest = *curr;
+                            largest = *curr;
                             value = std::move(curr_value);
                         }
                     });
 
-                return greatest;
+                return largest;
             }
 
             max_element()
@@ -612,21 +630,27 @@ namespace hpx { namespace parallel { inline namespace v1 {
             template <typename ExPolicy, typename FwdIter, typename Sent,
                 typename F, typename Proj>
             static FwdIter sequential(
-                ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
+                ExPolicy&& policy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
                 if (first == last)
                     return first;
 
-                FwdIter largest = first;
-                ++first;
-                for (; first != last; ++first)
-                {
-                    if (hpx::util::invoke(f, hpx::util::invoke(proj, *largest),
-                            hpx::util::invoke(proj, *first)))
-                    {
-                        largest = first;
-                    }
-                }
+                using element_type =
+                    typename std::iterator_traits<FwdIter>::value_type;
+
+                auto largest = first;
+
+                util::loop(std::forward<ExPolicy>(policy), ++first, last,
+                    [&f, &largest, &proj, value = HPX_INVOKE(proj, *largest)](
+                        FwdIter const& curr) mutable -> void {
+                        element_type curr_value = HPX_INVOKE(proj, *curr);
+                        if (HPX_INVOKE(f, value, curr_value))
+                        {
+                            largest = curr;
+                            value = std::move(curr_value);
+                        }
+                    });
+
                 return largest;
             }
 
@@ -706,11 +730,14 @@ namespace hpx { namespace parallel { inline namespace v1 {
             if (count == 0 || count == 1)
                 return result;
 
-            auto value = HPX_INVOKE(proj, *it);
+            using element_type =
+                typename std::iterator_traits<FwdIter>::value_type;
+
+            element_type value = HPX_INVOKE(proj, *it);
             util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
                 [&f, &result, &proj, min_value = value, max_value = value](
                     FwdIter const& curr) mutable -> void {
-                    auto curr_value = HPX_INVOKE(proj, *curr);
+                    element_type curr_value = HPX_INVOKE(proj, *curr);
                     if (HPX_INVOKE(f, curr_value, min_value))
                     {
                         result.min = curr;
@@ -745,6 +772,9 @@ namespace hpx { namespace parallel { inline namespace v1 {
                 if (count == 1)
                     return *it;
 
+                using element_type =
+                    typename std::iterator_traits<Iter>::value_type;
+
                 auto result = *it;
 
                 util::loop_n<std::decay_t<ExPolicy>>(++it, count - 1,
@@ -752,14 +782,16 @@ namespace hpx { namespace parallel { inline namespace v1 {
                         min_value = HPX_INVOKE(proj, *result.min),
                         max_value = HPX_INVOKE(proj, *result.max)](
                         PairIter const& curr) mutable -> void {
-                        auto curr_min_value = HPX_INVOKE(proj, *curr->min);
+                        element_type curr_min_value =
+                            HPX_INVOKE(proj, *curr->min);
                         if (HPX_INVOKE(f, curr_min_value, min_value))
                         {
                             result.min = curr->min;
                             min_value = std::move(curr_min_value);
                         }
 
-                        auto curr_max_value = HPX_INVOKE(proj, *curr->max);
+                        element_type curr_max_value =
+                            HPX_INVOKE(proj, *curr->max);
                         if (!HPX_INVOKE(f, curr_max_value, max_value))
                         {
                             result.max = curr->max;
@@ -778,65 +810,35 @@ namespace hpx { namespace parallel { inline namespace v1 {
             template <typename ExPolicy, typename FwdIter, typename Sent,
                 typename F, typename Proj>
             static minmax_element_result<FwdIter> sequential(
-                ExPolicy, FwdIter first, Sent last, F&& f, Proj&& proj)
+                ExPolicy&& policy, FwdIter first, Sent last, F&& f, Proj&& proj)
             {
                 auto min = first, max = first;
 
                 if (first == last || ++first == last)
+                {
                     return minmax_element_result<FwdIter>{min, max};
-
-                if (hpx::util::invoke(f, hpx::util::invoke(proj, *first),
-                        hpx::util::invoke(proj, *min)))
-                {
-                    min = first;
-                }
-                else
-                {
-                    max = first;
                 }
 
-                while (++first != last)
-                {
-                    auto i = first;
-                    if (++first == last)
-                    {
-                        if (hpx::util::invoke(f, hpx::util::invoke(proj, *i),
-                                hpx::util::invoke(proj, *min)))
-                            min = i;
-                        else if (!(hpx::util::invoke(f,
-                                     hpx::util::invoke(proj, *i),
-                                     hpx::util::invoke(proj, *max))))
-                            max = i;
-                        break;
-                    }
-                    else
-                    {
-                        if (hpx::util::invoke(f,
-                                hpx::util::invoke(proj, *first),
-                                hpx::util::invoke(proj, *i)))
+                using element_type =
+                    typename std::iterator_traits<FwdIter>::value_type;
+
+                util::loop(std::forward<ExPolicy>(policy), first, last,
+                    [&f, &min, &max, &proj, min_value = HPX_INVOKE(proj, *min),
+                        max_value = HPX_INVOKE(proj, *max)](
+                        FwdIter const& curr) mutable -> void {
+                        element_type curr_value = HPX_INVOKE(proj, *curr);
+                        if (HPX_INVOKE(f, curr_value, min_value))
                         {
-                            if (hpx::util::invoke(f,
-                                    hpx::util::invoke(proj, *first),
-                                    hpx::util::invoke(proj, *min)))
-                                min = first;
-                            if (!(hpx::util::invoke(f,
-                                    hpx::util::invoke(proj, *i),
-                                    hpx::util::invoke(proj, *max))))
-                                max = i;
+                            min = curr;
+                            min_value = curr_value;
                         }
-                        else
+
+                        if (!HPX_INVOKE(f, curr_value, max_value))
                         {
-                            if (hpx::util::invoke(f,
-                                    hpx::util::invoke(proj, *i),
-                                    hpx::util::invoke(proj, *min)))
-                                min = i;
-                            if (!(hpx::util::invoke(f,
-                                    hpx::util::invoke(proj, *first),
-                                    hpx::util::invoke(proj, *max))))
-                                max = first;
+                            max = curr;
+                            max_value = std::move(curr_value);
                         }
-                    }
-                }
+                    });
 
                 return minmax_element_result<FwdIter>{min, max};
             }
