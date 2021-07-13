@@ -90,6 +90,7 @@ set(tests
     transform_range_binary
     transform_range2
     transform_range_binary2
+    transform_inclusive_scan_range
     transform_reduce_binary_bad_alloc_range
     transform_reduce_binary_exception_range
     transform_reduce_binary_range
