@@ -609,8 +609,10 @@ Functions
 - :cpp:func:`hpx::parallel::v1::inclusive_scan`
 - :cpp:func:`hpx::reduce`
 - :cpp:func:`hpx::parallel::v1::transform_exclusive_scan`
-- :cpp:func:`hpx::parallel::v1::transform_inclusive_scan`
+- :cpp:func:`hpx::transform_inclusive_scan`
 - :cpp:func:`hpx::transform_reduce`
+
+- :cpp:func:`hpx::ranges::transform_inclusive_scan`
 
 Header ``hpx/optional.hpp``
 ===========================
