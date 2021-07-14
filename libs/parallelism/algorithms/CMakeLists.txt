@@ -119,6 +119,7 @@ set(algorithms_headers
     hpx/parallel/container_algorithms/set_union.hpp
     hpx/parallel/container_algorithms/sort.hpp
     hpx/parallel/container_algorithms/stable_sort.hpp
+    hpx/parallel/container_algorithms/swap_ranges.hpp
     hpx/parallel/container_algorithms/transform.hpp
     hpx/parallel/container_algorithms/transform_reduce.hpp
     hpx/parallel/container_algorithms/uninitialized_copy.hpp
