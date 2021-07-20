@@ -18,7 +18,6 @@ namespace hpx {
     using hpx::parallel::partition_copy;
     using hpx::parallel::rotate;
     using hpx::parallel::rotate_copy;
-    using hpx::parallel::sort;
     using hpx::parallel::stable_partition;
     using hpx::parallel::stable_sort;
     using hpx::parallel::swap_ranges;

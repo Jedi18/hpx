@@ -96,7 +96,7 @@ Functions
 - :cpp:func:`hpx::set_intersection`
 - :cpp:func:`hpx::set_symmetric_difference`
 - :cpp:func:`hpx::set_union`
-- :cpp:func:`hpx::parallel::v1::sort`
+- :cpp:func:`hpx::sort`
 - :cpp:func:`hpx::parallel::v1::stable_partition`
 - :cpp:func:`hpx::parallel::v1::stable_sort`
 - :cpp:func:`hpx::parallel::v1::swap_ranges`
@@ -143,6 +143,7 @@ Functions
 - :cpp:func:`hpx::ranges::set_intersection`
 - :cpp:func:`hpx::ranges::set_symmetric_difference`
 - :cpp:func:`hpx::ranges::set_union`
+- :cpp:func:`hpx::ranges::sort`
 - :cpp:func:`hpx::ranges::for_loop`
 - :cpp:func:`hpx::ranges::for_loop_strided`
 
