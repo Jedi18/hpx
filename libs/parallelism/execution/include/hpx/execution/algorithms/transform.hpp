@@ -7,6 +7,7 @@
 #pragma once
 
 #include <hpx/config.hpp>
+#include <hpx/concepts/concepts.hpp>
 #include <hpx/errors/try_catch_exception_ptr.hpp>
 #include <hpx/execution/algorithms/detail/partial_algorithm.hpp>
 #include <hpx/execution_base/receiver.hpp>
@@ -20,29 +21,22 @@
 
 namespace hpx { namespace execution { namespace experimental {
     namespace detail {
-        template <typename R, typename F>
+        template <typename Receiver, typename F>
         struct transform_receiver
         {
-            std::decay_t<R> r;
+            std::decay_t<Receiver> receiver;
             std::decay_t<F> f;
 
-            template <typename R_, typename F_>
-            transform_receiver(R_&& r, F_&& f)
-              : r(std::forward<R_>(r))
-              , f(std::forward<F_>(f))
-            {
-            }
-
-            template <typename E>
-                void set_error(E&& e) && noexcept
+            template <typename Error>
+                void set_error(Error&& error) && noexcept
             {
                 hpx::execution::experimental::set_error(
-                    std::move(r), std::forward<E>(e));
+                    std::move(receiver), std::forward<Error>(error));
             }
 
             void set_done() && noexcept
             {
-                hpx::execution::experimental::set_done(std::move(r));
+                hpx::execution::experimental::set_done(std::move(receiver));
             }
 
         private:
@@ -52,11 +46,12 @@ namespace hpx { namespace execution { namespace experimental {
                 hpx::detail::try_catch_exception_ptr(
                     [&]() {
                         HPX_INVOKE(f, std::forward<Ts>(ts)...);
-                        hpx::execution::experimental::set_value(std::move(r));
+                        hpx::execution::experimental::set_value(
+                            std::move(receiver));
                     },
                     [&](std::exception_ptr ep) {
                         hpx::execution::experimental::set_error(
-                            std::move(r), std::move(ep));
+                            std::move(receiver), std::move(ep));
                     });
             }
 
@@ -67,11 +62,11 @@ namespace hpx { namespace execution { namespace experimental {
                     [&]() {
                         auto&& result = HPX_INVOKE(f, std::forward<Ts>(ts)...);
                         hpx::execution::experimental::set_value(
-                            std::move(r), std::move(result));
+                            std::move(receiver), std::move(result));
                     },
                     [&](std::exception_ptr ep) {
                         hpx::execution::experimental::set_error(
-                            std::move(r), std::move(ep));
+                            std::move(receiver), std::move(ep));
                     });
             }
 
@@ -86,10 +81,10 @@ namespace hpx { namespace execution { namespace experimental {
             }
         };
 
-        template <typename S, typename F>
+        template <typename Sender, typename F>
         struct transform_sender
         {
-            std::decay_t<S> s;
+            std::decay_t<Sender> sender;
             std::decay_t<F> f;
 
             template <typename Tuple>
@@ -109,30 +104,32 @@ namespace hpx { namespace execution { namespace experimental {
             using value_types =
                 hpx::util::detail::unique_t<hpx::util::detail::transform_t<
                     typename hpx::execution::experimental::sender_traits<
-                        S>::template value_types<Tuple, Variant>,
+                        Sender>::template value_types<Tuple, Variant>,
                     invoke_result_helper>>;
 
             template <template <typename...> class Variant>
             using error_types =
                 hpx::util::detail::unique_t<hpx::util::detail::prepend_t<
                     typename hpx::execution::experimental::sender_traits<
-                        S>::template error_types<Variant>,
+                        Sender>::template error_types<Variant>,
                     std::exception_ptr>>;
 
             static constexpr bool sends_done = false;
 
-            template <typename R>
-            auto connect(R&& r) &&
+            template <typename Receiver>
+            auto connect(Receiver&& receiver) &&
             {
-                return hpx::execution::experimental::connect(std::move(s),
-                    transform_receiver<R, F>(std::forward<R>(r), std::move(f)));
+                return hpx::execution::experimental::connect(std::move(sender),
+                    transform_receiver<Receiver, F>{
+                        std::forward<Receiver>(receiver), std::move(f)});
             }
 
-            template <typename R>
-            auto connect(R&& r) &
+            template <typename Receiver>
+            auto connect(Receiver&& receiver) &
             {
-                return hpx::execution::experimental::connect(
-                    s, transform_receiver<R, F>(std::forward<R>(r), f));
+                return hpx::execution::experimental::connect(sender,
+                    transform_receiver<Receiver, F>{
+                        std::forward<Receiver>(receiver), f});
             }
         };
     }    // namespace detail
@@ -141,12 +138,17 @@ namespace hpx { namespace execution { namespace experimental {
       : hpx::functional::tag_fallback<transform_t>
     {
     private:
-        template <typename S, typename F>
+        // clang-format off
+        template <typename Sender, typename F,
+            HPX_CONCEPT_REQUIRES_(
+                is_sender_v<Sender>
+            )>
+        // clang-format on
         friend constexpr HPX_FORCEINLINE auto tag_fallback_dispatch(
-            transform_t, S&& s, F&& f)
+            transform_t, Sender&& sender, F&& f)
         {
-            return detail::transform_sender<S, F>{
-                std::forward<S>(s), std::forward<F>(f)};
+            return detail::transform_sender<Sender, F>{
+                std::forward<Sender>(sender), std::forward<F>(f)};
         }
 
         template <typename F>

@@ -58,9 +58,9 @@ endif()
 # Build all of HPX
 # ##############################################################################
 set(HPX_VERSION_MAJOR 1)
-set(HPX_VERSION_MINOR 7)
+set(HPX_VERSION_MINOR 8)
 set(HPX_VERSION_SUBMINOR 0)
-set(HPX_VERSION_DATE 20210217)
+set(HPX_VERSION_DATE 20210714)
 set(HPX_VERSION_TAG "-trunk")
 
 set(HPX_VERSION
@@ -1844,7 +1844,7 @@ if(WIN32)
   # ############################################################################
   add_definitions(-D_WINDOWS)
   add_definitions(-D_WIN32)
-  hpx_add_config_cond_define(_WIN32_WINNT 0x0601)
+  hpx_add_config_cond_define(_WIN32_WINNT 0x0602)
   hpx_add_config_cond_define(_SCL_SECURE_NO_WARNINGS)
   hpx_add_config_cond_define(_CRT_SECURE_NO_WARNINGS)
   hpx_add_config_cond_define(_SCL_SECURE_NO_DEPRECATE)
@@ -2015,7 +2015,9 @@ else()
      AND NOT WIN32
      AND NOT HPX_WITH_SANITIZERS
   )
-    hpx_add_link_flag_if_available(-Wl,-z,defs TARGETS SHARED EXE)
+    hpx_add_link_flag_if_available(
+      -Wl,-z,defs TARGETS SHARED_LIBRARY EXECUTABLE
+    )
   endif()
   if(WIN32)
     target_link_libraries(hpx_base_libraries INTERFACE psapi WS2_32 mswsock)
@@ -2027,7 +2029,9 @@ else()
 
   if(HPX_WITH_HIDDEN_VISIBILITY)
     hpx_add_compile_flag_if_available(-fvisibility=hidden)
-    hpx_add_link_flag_if_available(-fvisibility=hidden TARGETS SHARED EXE)
+    hpx_add_link_flag_if_available(
+      -fvisibility=hidden TARGETS SHARED_LIBRARY EXECUTABLE
+    )
     hpx_add_config_define(HPX_HAVE_ELF_HIDDEN_VISIBILITY)
     hpx_add_config_define(HPX_HAVE_COROUTINE_GCC_HIDDEN_VISIBILITY)
     hpx_add_config_define(HPX_HAVE_PLUGIN_GCC_HIDDEN_VISIBILITY)

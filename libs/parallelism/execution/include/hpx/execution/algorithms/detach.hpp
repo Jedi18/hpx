@@ -9,7 +9,9 @@
 #include <hpx/config.hpp>
 #include <hpx/allocator_support/allocator_deleter.hpp>
 #include <hpx/allocator_support/internal_allocator.hpp>
+#include <hpx/allocator_support/traits/is_allocator.hpp>
 #include <hpx/assert.hpp>
+#include <hpx/concepts/concepts.hpp>
 #include <hpx/execution/algorithms/detail/partial_algorithm.hpp>
 #include <hpx/execution_base/operation_state.hpp>
 #include <hpx/execution_base/sender.hpp>
@@ -28,15 +30,15 @@
 
 namespace hpx { namespace execution { namespace experimental {
     namespace detail {
-        template <typename S, typename Allocator>
+        template <typename Sender, typename Allocator>
         struct operation_state_holder
         {
             struct detach_receiver
             {
-                hpx::intrusive_ptr<operation_state_holder> os;
+                hpx::intrusive_ptr<operation_state_holder> op_state;
 
-                template <typename E>
-                    HPX_NORETURN void set_error(E&&) && noexcept
+                template <typename Error>
+                    HPX_NORETURN void set_error(Error&&) && noexcept
                 {
                     HPX_ASSERT_MSG(false,
                         "set_error was called on the receiver of detach, "
@@ -48,13 +50,13 @@ namespace hpx { namespace execution { namespace experimental {
 
                 void set_done() && noexcept
                 {
-                    os.reset();
+                    op_state.reset();
                 };
 
                 template <typename... Ts>
                     void set_value(Ts&&...) && noexcept
                 {
-                    os.reset();
+                    op_state.reset();
                 }
             };
 
@@ -64,18 +66,21 @@ namespace hpx { namespace execution { namespace experimental {
             allocator_type alloc;
             hpx::util::atomic_count count{0};
 
-            using operation_state_type = connect_result_t<S, detach_receiver>;
-            std::decay_t<operation_state_type> os;
+            using operation_state_type =
+                connect_result_t<Sender, detach_receiver>;
+            std::decay_t<operation_state_type> op_state;
 
         public:
-            template <typename S_,
-                typename = std::enable_if_t<!std::is_same<std::decay_t<S_>,
+            template <typename Sender_,
+                typename = std::enable_if_t<!std::is_same<std::decay_t<Sender_>,
                     operation_state_holder>::value>>
-            explicit operation_state_holder(S_&& s, allocator_type const& alloc)
+            explicit operation_state_holder(
+                Sender_&& sender, allocator_type const& alloc)
               : alloc(alloc)
-              , os(connect(std::forward<S_>(s), detach_receiver{this}))
+              , op_state(connect(
+                    std::forward<Sender_>(sender), detach_receiver{this}))
             {
-                start(os);
+                start(op_state);
             }
 
         private:
@@ -102,31 +107,45 @@ namespace hpx { namespace execution { namespace experimental {
       : hpx::functional::tag_fallback<detach_t>
     {
     private:
-        template <typename S,
-            typename Allocator = hpx::util::internal_allocator<>>
+        // clang-format off
+        template <typename Sender,
+            typename Allocator = hpx::util::internal_allocator<>,
+            HPX_CONCEPT_REQUIRES_(
+                is_sender_v<Sender> &&
+                hpx::traits::is_allocator_v<Allocator>
+            )>
+        // clang-format on
         friend constexpr HPX_FORCEINLINE void tag_fallback_dispatch(
-            detach_t, S&& s, Allocator&& a = Allocator{})
+            detach_t, Sender&& sender, Allocator const& allocator = Allocator{})
         {
             using allocator_type = Allocator;
             using operation_state_type =
-                detail::operation_state_holder<S, Allocator>;
+                detail::operation_state_holder<Sender, Allocator>;
             using other_allocator = typename std::allocator_traits<
                 allocator_type>::template rebind_alloc<operation_state_type>;
             using allocator_traits = std::allocator_traits<other_allocator>;
             using unique_ptr = std::unique_ptr<operation_state_type,
                 util::allocator_deleter<other_allocator>>;
 
-            other_allocator alloc(a);
+            other_allocator alloc(allocator);
             unique_ptr p(allocator_traits::allocate(alloc, 1),
                 hpx::util::allocator_deleter<other_allocator>{alloc});
 
-            new (p.get()) operation_state_type{std::forward<S>(s), alloc};
-            p.release();
+            new (p.get())
+                operation_state_type{std::forward<Sender>(sender), alloc};
+            HPX_UNUSED(p.release());
         }
 
-        friend constexpr HPX_FORCEINLINE auto tag_fallback_dispatch(detach_t)
+        // clang-format off
+        template <typename Allocator = hpx::util::internal_allocator<>,
+            HPX_CONCEPT_REQUIRES_(
+                hpx::traits::is_allocator_v<Allocator>
+            )>
+        // clang-format on
+        friend constexpr HPX_FORCEINLINE auto tag_fallback_dispatch(
+            detach_t, Allocator const& allocator = Allocator{})
         {
-            return detail::partial_algorithm<detach_t>{};
+            return detail::partial_algorithm<detach_t, Allocator>{allocator};
         }
     } detach{};
 }}}    // namespace hpx::execution::experimental
