@@ -17,3 +17,5 @@ packages
 .vscode
 .ccls-cache
 .clangd
+/out
+/.vs
