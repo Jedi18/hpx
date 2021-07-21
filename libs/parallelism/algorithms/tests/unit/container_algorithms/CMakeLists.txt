@@ -85,6 +85,7 @@ set(tests
     set_symmetric_difference_range
     set_union_range
     shift_left_range
+    shift_right_range
     sort_range
     stable_sort_range
     transform_range

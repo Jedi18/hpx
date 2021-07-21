@@ -120,6 +120,7 @@ set(algorithms_headers
     hpx/parallel/container_algorithms/set_symmetric_difference.hpp
     hpx/parallel/container_algorithms/set_union.hpp
     hpx/parallel/container_algorithms/shift_left.hpp
+    hpx/parallel/container_algorithms/shift_right.hpp
     hpx/parallel/container_algorithms/sort.hpp
     hpx/parallel/container_algorithms/stable_sort.hpp
     hpx/parallel/container_algorithms/transform.hpp
