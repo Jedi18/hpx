@@ -51,4 +51,6 @@
 #include <hpx/parallel/algorithms/unique.hpp>
 
 // Parallelism TS V2
+#include <hpx/parallel/algorithms/ends_with.hpp>
 #include <hpx/parallel/algorithms/for_loop.hpp>
+#include <hpx/parallel/algorithms/starts_with.hpp>
