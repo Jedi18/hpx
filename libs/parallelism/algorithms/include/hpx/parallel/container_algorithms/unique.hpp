@@ -605,18 +605,24 @@ namespace hpx { namespace ranges {
 #include <utility>
 
 namespace hpx { namespace parallel { inline namespace v1 {
-    template <typename ExPolicy, typename Rng, typename Pred = detail::equal_to,
+    // clang-format off
+    template <typename ExPolicy, typename Rng,
+        typename Pred = detail::equal_to,
         typename Proj = util::projection_identity,
-        HPX_CONCEPT_REQUIRES_(hpx::is_execution_policy<ExPolicy>::value&&
-                hpx::traits::is_range<Rng>::value&& traits::is_projected_range<
-                    Proj, Rng>::value&& traits::is_indirect_callable<ExPolicy,
-                    Pred, traits::projected_range<Proj, Rng>,
-                    traits::projected_range<Proj, Rng>>::value)>
+        HPX_CONCEPT_REQUIRES_(
+            hpx::is_execution_policy<ExPolicy>::value &&
+            hpx::traits::is_range<Rng>::value &&
+            traits::is_projected_range<Proj, Rng>::value &&
+            traits::is_indirect_callable<ExPolicy, Pred,
+                traits::projected_range<Proj, Rng>,
+                traits::projected_range<Proj, Rng>>::value
+        )>
+    // clang-format on
     HPX_DEPRECATED_V(
         1, 8, "hpx::parallel::unique is deprecated, use hpx::unique instead")
-    typename util::detail::algorithm_result<ExPolicy,
-        hpx::traits::range_iterator_t<Rng>>::type unique(ExPolicy&& policy,
-        Rng&& rng, Pred&& pred = Pred(), Proj&& proj = Proj())
+        typename util::detail::algorithm_result<ExPolicy,
+            hpx::traits::range_iterator_t<Rng>>::type unique(ExPolicy&& policy,
+            Rng&& rng, Pred&& pred = Pred(), Proj&& proj = Proj())
     {
 #if defined(HPX_GCC_VERSION) && HPX_GCC_VERSION >= 100000
 #pragma GCC diagnostic push
@@ -630,19 +636,23 @@ namespace hpx { namespace parallel { inline namespace v1 {
 #endif
     }
 
+    // clang-format off
     template <typename ExPolicy, typename Rng, typename FwdIter2,
         typename Pred = detail::equal_to,
         typename Proj = util::projection_identity,
-        HPX_CONCEPT_REQUIRES_(hpx::is_execution_policy<ExPolicy>::value&&
-                hpx::traits::is_range<Rng>::value&& hpx::traits::is_iterator<
-                    FwdIter2>::value&& traits::is_projected_range<Proj,
-                    Rng>::value&& traits::is_indirect_callable<ExPolicy, Pred,
-                    traits::projected_range<Proj, Rng>,
-                    traits::projected_range<Proj, Rng>>::value)>
+        HPX_CONCEPT_REQUIRES_(
+            hpx::is_execution_policy<ExPolicy>::value &&
+            hpx::traits::is_range<Rng>::value &&
+            hpx::traits::is_iterator<FwdIter2>::value &&
+            traits::is_projected_range<Proj, Rng>::value &&
+            traits::is_indirect_callable<ExPolicy, Pred,
+                traits::projected_range<Proj, Rng>,
+                traits::projected_range<Proj, Rng>>::value
+        )>
+    // clang-format on
     HPX_DEPRECATED_V(1, 8,
         "hpx::parallel::unique_copy is deprecated, use hpx::unique_copy "
-        "instead")
-    typename util::detail::algorithm_result<ExPolicy,
+        "instead") typename util::detail::algorithm_result<ExPolicy,
         util::in_out_result<hpx::traits::range_iterator_t<Rng>, FwdIter2>>::type
         unique_copy(ExPolicy&& policy, Rng&& rng, FwdIter2 dest,
             Pred&& pred = Pred(), Proj&& proj = Proj())
@@ -677,7 +687,7 @@ namespace hpx { namespace ranges {
             typename Pred = ranges::equal_to,
             typename Proj = parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
-                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::traits::is_iterator_v<FwdIter> &&
                 hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
                 parallel::traits::is_projected<Proj, FwdIter>::value &&
                 parallel::traits::is_indirect_callable<
@@ -690,7 +700,7 @@ namespace hpx { namespace ranges {
             hpx::ranges::unique_t, FwdIter first, Sent last,
             Pred&& pred = Pred(), Proj&& proj = Proj())
         {
-            static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<FwdIter>,
                 "Requires at least forward iterator.");
 
             return hpx::parallel::util::make_subrange<FwdIter, Sent>(
@@ -706,7 +716,7 @@ namespace hpx { namespace ranges {
             typename Proj = parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::is_execution_policy<ExPolicy>::value &&
-                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::traits::is_iterator_v<FwdIter> &&
                 hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
                 parallel::traits::is_projected<Proj, FwdIter>::value &&
                 parallel::traits::is_indirect_callable<
@@ -721,7 +731,7 @@ namespace hpx { namespace ranges {
             FwdIter first, Sent last, Pred&& pred = Pred(),
             Proj&& proj = Proj())
         {
-            static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<FwdIter>,
                 "Requires at least forward iterator.");
 
             return hpx::parallel::util::make_subrange<FwdIter, Sent>(
@@ -751,8 +761,7 @@ namespace hpx { namespace ranges {
         {
             using iterator_type = hpx::traits::range_iterator_t<Rng>;
 
-            static_assert(
-                hpx::traits::is_forward_iterator<iterator_type>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<iterator_type>,
                 "Requires at least input iterator.");
 
             return hpx::parallel::util::make_subrange<
@@ -788,8 +797,7 @@ namespace hpx { namespace ranges {
         {
             using iterator_type = hpx::traits::range_iterator_t<Rng>;
 
-            static_assert(
-                hpx::traits::is_forward_iterator<iterator_type>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<iterator_type>,
                 "Requires at least forward iterator.");
 
             return hpx::parallel::util::make_subrange<
@@ -818,7 +826,7 @@ namespace hpx { namespace ranges {
             typename Pred = ranges::equal_to,
             typename Proj = parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
-                hpx::traits::is_iterator<InIter>::value &&
+                hpx::traits::is_iterator_v<InIter> &&
                 hpx::traits::is_sentinel_for<Sent, InIter>::value &&
                 parallel::traits::is_projected<Proj, InIter>::value &&
                 parallel::traits::is_indirect_callable<
@@ -831,7 +839,7 @@ namespace hpx { namespace ranges {
             hpx::ranges::unique_copy_t, InIter first, Sent last, O dest,
             Pred&& pred = Pred(), Proj&& proj = Proj())
         {
-            static_assert(hpx::traits::is_input_iterator<InIter>::value,
+            static_assert(hpx::traits::is_input_iterator_v<InIter>,
                 "Requires at least input iterator.");
 
             using result_type = unique_copy_result<InIter, O>;
@@ -848,7 +856,7 @@ namespace hpx { namespace ranges {
             typename Proj = parallel::util::projection_identity,
             HPX_CONCEPT_REQUIRES_(
                 hpx::is_execution_policy<ExPolicy>::value &&
-                hpx::traits::is_iterator<FwdIter>::value &&
+                hpx::traits::is_iterator_v<FwdIter> &&
                 hpx::traits::is_sentinel_for<Sent, FwdIter>::value &&
                 parallel::traits::is_projected<Proj, FwdIter>::value &&
                 parallel::traits::is_indirect_callable<
@@ -863,7 +871,7 @@ namespace hpx { namespace ranges {
             FwdIter first, Sent last, O dest, Pred&& pred = Pred(),
             Proj&& proj = Proj())
         {
-            static_assert(hpx::traits::is_forward_iterator<FwdIter>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<FwdIter>,
                 "Requires at least forward iterator.");
 
             using result_type = unique_copy_result<FwdIter, O>;
@@ -892,7 +900,7 @@ namespace hpx { namespace ranges {
         {
             using iterator_type = hpx::traits::range_iterator_t<Rng>;
 
-            static_assert(hpx::traits::is_input_iterator<iterator_type>::value,
+            static_assert(hpx::traits::is_input_iterator_v<iterator_type>,
                 "Requires at least input iterator.");
 
             using result_type = unique_copy_result<iterator_type, O>;
@@ -923,8 +931,7 @@ namespace hpx { namespace ranges {
         {
             using iterator_type = hpx::traits::range_iterator_t<Rng>;
 
-            static_assert(
-                hpx::traits::is_forward_iterator<iterator_type>::value,
+            static_assert(hpx::traits::is_forward_iterator_v<iterator_type>,
                 "Requires at least input iterator.");
 
             using result_type = unique_copy_result<iterator_type, O>;
